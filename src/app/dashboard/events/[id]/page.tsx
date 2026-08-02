@@ -1,0 +1,283 @@
+'use client';
+
+import { use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { apiFetch, ApiError } from '@/lib/api';
+import { signAndSubmit } from '@/lib/onchain';
+import type { EventRecord, TicketType } from '@/lib/types';
+import { FormError } from '@/components/form-error';
+import { WalletConnectButton } from '@/components/wallet-connect-button';
+
+export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  const [event, setEvent] = useState<EventRecord | null>(null);
+  const [loadingEvent, setLoadingEvent] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const [ttName, setTtName] = useState('');
+  const [ttPrice, setTtPrice] = useState('');
+  const [ttQuantity, setTtQuantity] = useState('');
+  const [savingTicketType, setSavingTicketType] = useState(false);
+
+  const [publishing, setPublishing] = useState(false);
+
+  const [issueEmail, setIssueEmail] = useState('');
+  const [issueTicketTypeId, setIssueTicketTypeId] = useState('');
+  const [issueSeat, setIssueSeat] = useState('');
+  const [issuing, setIssuing] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) router.push('/login');
+  }, [loading, user, router]);
+
+  async function loadEvent() {
+    const res = await apiFetch<EventRecord>(`/events/${id}`);
+    setEvent(res);
+    if (res.ticketTypes && res.ticketTypes.length > 0 && !issueTicketTypeId) {
+      setIssueTicketTypeId(res.ticketTypes[0].id);
+    }
+  }
+
+  useEffect(() => {
+    if (!user) return;
+    async function run() {
+      await loadEvent();
+      setLoadingEvent(false);
+    }
+    void run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user]);
+
+  async function handleAddTicketType(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSavingTicketType(true);
+    try {
+      const tt = await apiFetch<TicketType>(`/events/${id}/ticket-types`, {
+        method: 'POST',
+        body: { name: ttName, price: ttPrice, quantityTotal: Number(ttQuantity) },
+      });
+      setEvent((prev) => (prev ? { ...prev, ticketTypes: [...(prev.ticketTypes ?? []), tt] } : prev));
+      setTtName('');
+      setTtPrice('');
+      setTtQuantity('');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not add the ticket type.');
+    } finally {
+      setSavingTicketType(false);
+    }
+  }
+
+  async function handlePublish() {
+    if (!user?.stellarPublicKey) {
+      setError('Connect your organization’s Stellar wallet before publishing.');
+      return;
+    }
+    setError(null);
+    setPublishing(true);
+    try {
+      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(`/events/${id}/publish`, {
+        method: 'POST',
+      });
+      await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
+        apiFetch(`/events/${id}/confirm-publish`, { method: 'POST', body: { signedXdr } }),
+      );
+      setNotice('Event published on-chain.');
+      await loadEvent();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not publish this event.');
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function handleIssue(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user?.stellarPublicKey) {
+      setError('Connect your organization’s Stellar wallet before issuing tickets.');
+      return;
+    }
+    setError(null);
+    setNotice(null);
+    setIssuing(true);
+    try {
+      const recipient = await apiFetch<{ id: string }>(
+        `/users/lookup?email=${encodeURIComponent(issueEmail)}`,
+      );
+      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>('/tickets/issue', {
+        method: 'POST',
+        body: { ticketTypeId: issueTicketTypeId, toUserId: recipient.id, seat: issueSeat || undefined },
+      });
+      await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
+        apiFetch('/tickets/confirm-issue', {
+          method: 'POST',
+          body: {
+            ticketTypeId: issueTicketTypeId,
+            toUserId: recipient.id,
+            seat: issueSeat || undefined,
+            signedXdr,
+          },
+        }),
+      );
+      setNotice(`Ticket issued to ${issueEmail}.`);
+      setIssueEmail('');
+      setIssueSeat('');
+      await loadEvent();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not issue this ticket.');
+    } finally {
+      setIssuing(false);
+    }
+  }
+
+  if (loading || !user || loadingEvent || !event) return null;
+
+  return (
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <p className="text-sm text-muted">{event.venue}</p>
+      <div className="mt-1 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold">{event.name}</h1>
+        <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">
+          {event.status}
+        </span>
+      </div>
+
+      <div className="mt-4">
+        <WalletConnectButton />
+      </div>
+
+      {error && (
+        <div className="mt-6">
+          <FormError message={error} />
+        </div>
+      )}
+      {notice && <p className="mt-6 text-sm text-primary">{notice}</p>}
+
+      {event.status === 'DRAFT' && (
+        <button
+          onClick={handlePublish}
+          disabled={publishing}
+          className="mt-6 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+        >
+          {publishing ? 'Publishing…' : 'Publish event on-chain'}
+        </button>
+      )}
+
+      <h2 className="mt-10 text-xl font-semibold">Ticket types</h2>
+      {!event.ticketTypes || event.ticketTypes.length === 0 ? (
+        <p className="mt-4 text-muted">No ticket types yet.</p>
+      ) : (
+        <ul className="mt-4 flex flex-col gap-2">
+          {event.ticketTypes.map((tt) => (
+            <li
+              key={tt.id}
+              className="flex items-center justify-between rounded-lg border border-border p-4"
+            >
+              <span>{tt.name}</span>
+              <span className="text-sm text-muted">
+                {tt.price} · {tt.quantityIssued}/{tt.quantityTotal} issued
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form onSubmit={handleAddTicketType} className="mt-4 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-sm">
+          Name
+          <input
+            required
+            placeholder="GA"
+            value={ttName}
+            onChange={(e) => setTtName(e.target.value)}
+            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Price
+          <input
+            required
+            inputMode="numeric"
+            placeholder="1000"
+            value={ttPrice}
+            onChange={(e) => setTtPrice(e.target.value)}
+            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Quantity
+          <input
+            required
+            inputMode="numeric"
+            placeholder="100"
+            value={ttQuantity}
+            onChange={(e) => setTtQuantity(e.target.value)}
+            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={savingTicketType}
+          className="rounded-md border border-border px-4 py-2 font-medium hover:bg-surface disabled:opacity-50"
+        >
+          {savingTicketType ? 'Adding…' : 'Add ticket type'}
+        </button>
+      </form>
+
+      {event.ticketTypes && event.ticketTypes.length > 0 && (
+        <>
+          <h2 className="mt-10 text-xl font-semibold">Issue a ticket</h2>
+          <form onSubmit={handleIssue} className="mt-4 flex flex-col gap-4">
+            <label className="flex flex-col gap-1 text-sm">
+              Recipient email
+              <input
+                type="email"
+                required
+                value={issueEmail}
+                onChange={(e) => setIssueEmail(e.target.value)}
+                className="rounded-md border border-border bg-surface px-3 py-2"
+              />
+              <span className="text-xs text-muted">
+                The recipient must already have a StellarTickets account with a connected wallet.
+              </span>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Ticket type
+              <select
+                value={issueTicketTypeId}
+                onChange={(e) => setIssueTicketTypeId(e.target.value)}
+                className="rounded-md border border-border bg-surface px-3 py-2"
+              >
+                {event.ticketTypes.map((tt) => (
+                  <option key={tt.id} value={tt.id}>
+                    {tt.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Seat (optional)
+              <input
+                value={issueSeat}
+                onChange={(e) => setIssueSeat(e.target.value)}
+                className="rounded-md border border-border bg-surface px-3 py-2"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={issuing}
+              className="self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {issuing ? 'Issuing…' : 'Issue ticket'}
+            </button>
+          </form>
+        </>
+      )}
+    </div>
+  );
+}

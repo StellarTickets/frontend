@@ -1,0 +1,177 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { apiFetch, ApiError } from '@/lib/api';
+import { signAndSubmit } from '@/lib/onchain';
+import { FormError } from '@/components/form-error';
+import { WalletConnectButton } from '@/components/wallet-connect-button';
+
+interface VerifyResult {
+  ticketId: string;
+  eventName: string;
+  tier: string;
+  seat: string;
+  ownerName: string;
+  status: 'VALID' | 'USED' | 'REVOKED' | 'RESALE';
+  onChainOwner: string;
+}
+
+const STATUS_STYLES: Record<VerifyResult['status'], string> = {
+  VALID: 'text-emerald-400 border-emerald-900/50 bg-emerald-950/30',
+  USED: 'text-amber-400 border-amber-900/50 bg-amber-950/30',
+  REVOKED: 'text-red-400 border-red-900/50 bg-red-950/30',
+  RESALE: 'text-sky-400 border-sky-900/50 bg-sky-950/30',
+};
+
+export default function VerifyPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [code, setCode] = useState('');
+  const [result, setResult] = useState<VerifyResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) router.push('/login');
+  }, [loading, user, router]);
+
+  async function handleLookup(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setResult(null);
+    setChecking(true);
+    try {
+      const res = await apiFetch<VerifyResult>(`/tickets/verify/${encodeURIComponent(code)}`);
+      setResult(res);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not verify this ticket.');
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function handleCheckIn() {
+    if (!result || !user?.stellarPublicKey) return;
+    setError(null);
+    setActionBusy(true);
+    try {
+      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
+        `/tickets/${result.ticketId}/check-in`,
+        { method: 'POST' },
+      );
+      await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
+        apiFetch(`/tickets/${result.ticketId}/confirm-check-in`, {
+          method: 'POST',
+          body: { signedXdr },
+        }),
+      );
+      setResult({ ...result, status: 'USED' });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not check in this ticket.');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleRevoke() {
+    if (!result || !user?.stellarPublicKey) return;
+    setError(null);
+    setActionBusy(true);
+    try {
+      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
+        `/tickets/${result.ticketId}/revoke`,
+        { method: 'POST' },
+      );
+      await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
+        apiFetch(`/tickets/${result.ticketId}/confirm-revoke`, {
+          method: 'POST',
+          body: { signedXdr },
+        }),
+      );
+      setResult({ ...result, status: 'REVOKED' });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not revoke this ticket.');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  if (loading || !user) return null;
+
+  return (
+    <div className="mx-auto max-w-lg px-6 py-16">
+      <h1 className="text-2xl font-semibold">Verify a ticket</h1>
+      <p className="mt-2 text-muted">
+        Enter the code from a ticket’s QR to check its on-chain owner and status before admitting
+        entry. You must be staff on the event’s organization to verify or check in its tickets.
+      </p>
+      <div className="mt-4">
+        <WalletConnectButton />
+      </div>
+
+      <form onSubmit={handleLookup} className="mt-6 flex gap-3">
+        <input
+          required
+          placeholder="Ticket code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          className="flex-1 rounded-md border border-border bg-surface px-3 py-2 font-mono text-sm"
+        />
+        <button
+          type="submit"
+          disabled={checking}
+          className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+        >
+          {checking ? 'Checking…' : 'Verify'}
+        </button>
+      </form>
+
+      {error && (
+        <div className="mt-6">
+          <FormError message={error} />
+        </div>
+      )}
+
+      {result && (
+        <div className={`mt-6 rounded-lg border p-6 ${STATUS_STYLES[result.status]}`}>
+          <p className="text-lg font-semibold">{result.status}</p>
+          <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-foreground">
+            <dt className="text-muted">Event</dt>
+            <dd>{result.eventName}</dd>
+            <dt className="text-muted">Tier / seat</dt>
+            <dd>
+              {result.tier} · {result.seat}
+            </dd>
+            <dt className="text-muted">Owner</dt>
+            <dd>{result.ownerName}</dd>
+            <dt className="text-muted">On-chain owner</dt>
+            <dd className="truncate font-mono text-xs">{result.onChainOwner}</dd>
+          </dl>
+          <div className="mt-4 flex gap-3">
+            {result.status === 'VALID' && (
+              <button
+                onClick={handleCheckIn}
+                disabled={actionBusy}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              >
+                {actionBusy ? 'Working…' : 'Check in'}
+              </button>
+            )}
+            {result.status !== 'REVOKED' && (
+              <button
+                onClick={handleRevoke}
+                disabled={actionBusy}
+                className="rounded-md border border-red-900/50 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-950/30 disabled:opacity-50"
+              >
+                {actionBusy ? 'Working…' : 'Revoke'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
