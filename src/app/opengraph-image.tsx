@@ -16,9 +16,7 @@ export default function OpengraphImage() {
           justifyContent: 'center',
           alignItems: 'flex-start',
           padding: '80px',
-          background: '#0a0710',
-          backgroundImage:
-            'radial-gradient(55% 60% at 10% 0%, rgba(167,139,250,0.28), transparent), radial-gradient(45% 45% at 100% 100%, rgba(244,114,182,0.2), transparent)',
+          background: '#000000',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>

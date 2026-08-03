@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0710;
+  --background: #000000;
   --surface: #150f22;
   --surface-2: #1c1430;
   --foreground: #f7f5fb;
@@ -43,10 +43,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  background-image:
-    radial-gradient(50% 40% at 15% 0%, rgba(167, 139, 250, 0.16), transparent 70%),
-    radial-gradient(45% 35% at 100% 15%, rgba(244, 114, 182, 0.12), transparent 70%);
-  background-repeat: no-repeat;
 }
 
 .text-gradient {
@@ -113,22 +109,4 @@ body {
   .animate-marquee-reverse {
     animation: none;
   }
-}
-
-.cursor-dot {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  background: white;
-  mix-blend-mode: difference;
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition:
-    width 0.2s ease,
-    height 0.2s ease,
-    opacity 0.2s ease;
 }
