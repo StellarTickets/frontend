@@ -22,21 +22,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
-          <div
-            style={{
-              display: 'flex',
-              width: 60,
-              height: 60,
-              borderRadius: 14,
-              background: 'rgba(167,139,250,0.14)',
-              border: '1px solid rgba(167,139,250,0.4)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {/* Same mark as components/logo.tsx and app/icon.tsx — not a stand-in. */}
-            <LogoMark size={30} gradient={false} />
-          </div>
+          {/* Same mark as components/logo.tsx and app/icon.tsx — not a stand-in. */}
+          <LogoMark size={60} />
           <div style={{ display: 'flex', color: '#fff', fontSize: 40, fontWeight: 700 }}>
             StellarTickets
           </div>

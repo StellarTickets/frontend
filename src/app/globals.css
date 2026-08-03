@@ -17,7 +17,8 @@
   --primary-foreground: #ffffff;
   --accent: #f5b400;
 
-  --gradient-sunset: linear-gradient(115deg, var(--violet) 0%, var(--magenta) 55%, var(--amber) 100%);
+  /* Keep in sync with BRAND_GRADIENT in components/logo.tsx — same colors, same stops, same angle. */
+  --gradient-sunset: linear-gradient(135deg, var(--violet) 0%, var(--magenta) 55%, var(--amber) 100%);
   --gradient-glow: radial-gradient(60% 60% at 50% 0%, rgba(167, 139, 250, 0.35), transparent 70%);
 }
 
