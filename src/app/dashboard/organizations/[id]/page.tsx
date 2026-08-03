@@ -66,9 +66,9 @@ export default function OrganizationPage({ params }: { params: Promise<{ id: str
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
       <p className="text-sm text-muted">{INDUSTRY_LABELS[org.industry]}</p>
-      <h1 className="text-2xl font-semibold">{org.name}</h1>
+      <h1 className="font-heading text-3xl font-bold">{org.name}</h1>
 
-      <h2 className="mt-10 text-xl font-semibold">Events</h2>
+      <h2 className="mt-10 font-heading text-xl font-bold">Events</h2>
       {events.length === 0 ? (
         <p className="mt-4 text-muted">No events yet — create one below.</p>
       ) : (
@@ -90,7 +90,7 @@ export default function OrganizationPage({ params }: { params: Promise<{ id: str
         </ul>
       )}
 
-      <h2 className="mt-12 text-xl font-semibold">Create an event</h2>
+      <h2 className="mt-12 font-heading text-xl font-bold">Create an event</h2>
       <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-4">
         <FormError message={error} />
         <label className="flex flex-col gap-1 text-sm">
@@ -138,7 +138,7 @@ export default function OrganizationPage({ params }: { params: Promise<{ id: str
         <button
           type="submit"
           disabled={submitting}
-          className="self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="self-start rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Creating…' : 'Create event'}
         </button>

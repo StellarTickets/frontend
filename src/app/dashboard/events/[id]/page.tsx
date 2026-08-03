@@ -141,7 +141,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
     <div className="mx-auto max-w-3xl px-6 py-16">
       <p className="text-sm text-muted">{event.venue}</p>
       <div className="mt-1 flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">{event.name}</h1>
+        <h1 className="font-heading text-3xl font-bold">{event.name}</h1>
         <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">
           {event.status}
         </span>
@@ -156,19 +156,19 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-primary">{notice}</p>}
+      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
 
       {event.status === 'DRAFT' && (
         <button
           onClick={handlePublish}
           disabled={publishing}
-          className="mt-6 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="mt-6 rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {publishing ? 'Publishing…' : 'Publish event on-chain'}
         </button>
       )}
 
-      <h2 className="mt-10 text-xl font-semibold">Ticket types</h2>
+      <h2 className="mt-10 font-heading text-xl font-bold">Ticket types</h2>
       {!event.ticketTypes || event.ticketTypes.length === 0 ? (
         <p className="mt-4 text-muted">No ticket types yet.</p>
       ) : (
@@ -231,7 +231,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
       {event.ticketTypes && event.ticketTypes.length > 0 && (
         <>
-          <h2 className="mt-10 text-xl font-semibold">Issue a ticket</h2>
+          <h2 className="mt-10 font-heading text-xl font-bold">Issue a ticket</h2>
           <form onSubmit={handleIssue} className="mt-4 flex flex-col gap-4">
             <label className="flex flex-col gap-1 text-sm">
               Recipient email
@@ -271,7 +271,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             <button
               type="submit"
               disabled={issuing}
-              className="self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
             >
               {issuing ? 'Issuing…' : 'Issue ticket'}
             </button>

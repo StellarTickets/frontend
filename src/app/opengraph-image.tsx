@@ -16,26 +16,26 @@ export default function OpengraphImage() {
           justifyContent: 'center',
           alignItems: 'flex-start',
           padding: '80px',
-          background: '#0b0a10',
+          background: '#0a0710',
           backgroundImage:
-            'radial-gradient(60% 50% at 30% 0%, rgba(139,92,246,0.22), transparent)',
+            'radial-gradient(55% 60% at 10% 0%, rgba(167,139,250,0.28), transparent), radial-gradient(45% 45% at 100% 100%, rgba(244,114,182,0.2), transparent)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
           <div
             style={{
               display: 'flex',
-              width: 56,
-              height: 56,
-              borderRadius: 12,
-              background: 'rgba(139,92,246,0.15)',
-              border: '1px solid rgba(139,92,246,0.4)',
+              width: 60,
+              height: 60,
+              borderRadius: 14,
+              background: 'rgba(167,139,250,0.14)',
+              border: '1px solid rgba(167,139,250,0.4)',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
             {/* Same mark as components/logo.tsx and app/icon.tsx — not a stand-in. */}
-            <LogoMark size={28} color="#a78bfa" />
+            <LogoMark size={30} gradient={false} />
           </div>
           <div style={{ display: 'flex', color: '#fff', fontSize: 40, fontWeight: 700 }}>
             StellarTickets
@@ -45,9 +45,9 @@ export default function OpengraphImage() {
           style={{
             display: 'flex',
             color: '#fff',
-            fontSize: 56,
+            fontSize: 58,
             fontWeight: 700,
-            lineHeight: 1.15,
+            lineHeight: 1.12,
             maxWidth: 980,
           }}
         >
@@ -56,13 +56,18 @@ export default function OpengraphImage() {
         <div
           style={{
             display: 'flex',
-            color: '#9c98ad',
+            color: '#a79fbe',
             fontSize: 28,
             marginTop: 24,
             maxWidth: 900,
           }}
         >
-          Blockchain-powered tickets for concerts, flights, sports, and more.
+          Blockchain-powered tickets for concerts, flights, sports, and 9 more industries.
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 44 }}>
+          {['#a78bfa', '#f472b6', '#f5b400'].map((c) => (
+            <div key={c} style={{ display: 'flex', width: 64, height: 6, borderRadius: 3, background: c }} />
+          ))}
         </div>
       </div>
     ),

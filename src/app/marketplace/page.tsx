@@ -61,7 +61,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">Resale marketplace</h1>
+      <h1 className="font-heading text-3xl font-bold">Resale marketplace</h1>
       <p className="mt-2 text-muted">
         Every listing below is a real ticket resold under its event’s anti-scalping price cap and
         organizer royalty, settled on-chain.
@@ -75,7 +75,7 @@ export default function MarketplacePage() {
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-primary">{notice}</p>}
+      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
 
       {loadingListings ? (
         <p className="mt-8 text-muted">Loading…</p>
@@ -100,7 +100,7 @@ export default function MarketplacePage() {
                 <button
                   onClick={() => handleBuy(listing.ticketId)}
                   disabled={buyingTicketId === listing.ticketId}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  className="rounded-md bg-gradient-sunset px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
                 >
                   {buyingTicketId === listing.ticketId ? 'Buying…' : 'Buy'}
                 </button>

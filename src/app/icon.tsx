@@ -14,12 +14,12 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0b0a10',
+          background: '#0a0710',
           borderRadius: 7,
         }}
       >
         {/* Same mark as components/logo.tsx and opengraph-image.tsx — not a stand-in. */}
-        <LogoMark size={20} color="#8b5cf6" />
+        <LogoMark size={22} gradient={false} />
       </div>
     ),
     { ...size },

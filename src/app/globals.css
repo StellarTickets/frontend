@@ -1,30 +1,89 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0a10;
-  --surface: #131220;
-  --foreground: #f5f4f8;
-  --muted: #9c98ad;
-  --border: #24222f;
+  --background: #0a0710;
+  --surface: #150f22;
+  --surface-2: #1c1430;
+  --foreground: #f7f5fb;
+  --muted: #a79fbe;
+  --border: #2a2340;
+  --border-bright: #3d3160;
+
+  --violet: #a78bfa;
+  --magenta: #f472b6;
+  --amber: #f5b400;
+
   --primary: #8b5cf6;
   --primary-foreground: #ffffff;
   --accent: #f5b400;
+
+  --gradient-sunset: linear-gradient(115deg, var(--violet) 0%, var(--magenta) 55%, var(--amber) 100%);
+  --gradient-glow: radial-gradient(60% 60% at 50% 0%, rgba(167, 139, 250, 0.35), transparent 70%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-border-bright: var(--border-bright);
+  --color-violet: var(--violet);
+  --color-magenta: var(--magenta);
+  --color-amber: var(--amber);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  background-image:
+    radial-gradient(50% 40% at 15% 0%, rgba(167, 139, 250, 0.16), transparent 70%),
+    radial-gradient(45% 35% at 100% 15%, rgba(244, 114, 182, 0.12), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+.text-gradient {
+  background-image: var(--gradient-sunset);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-sunset {
+  background-image: var(--gradient-sunset);
+}
+
+.border-gradient {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--gradient-sunset) border-box;
+}
+
+.ticket-notch {
+  position: relative;
+}
+.ticket-notch::before,
+.ticket-notch::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--background);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.ticket-notch::before {
+  left: -11px;
+}
+.ticket-notch::after {
+  right: -11px;
 }

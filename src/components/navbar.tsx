@@ -8,12 +8,18 @@ export function Navbar() {
   const { user, loading, logout } = useAuth();
 
   return (
-    <header className="border-b border-border">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/">
-          <Logo />
+          <Logo className="text-lg" />
         </Link>
         <div className="flex items-center gap-6 text-sm text-muted">
+          <Link href="/about" className="hidden hover:text-foreground sm:inline">
+            About
+          </Link>
+          <Link href="/security" className="hidden hover:text-foreground sm:inline">
+            Security
+          </Link>
           <Link href="/marketplace" className="hover:text-foreground">
             Marketplace
           </Link>
@@ -37,7 +43,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90"
+                className="rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90"
               >
                 Get started
               </Link>

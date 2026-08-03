@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex max-w-sm flex-col gap-6 px-6 py-24">
-      <h1 className="text-2xl font-semibold">Log in</h1>
+      <h1 className="font-heading text-3xl font-bold">Log in</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <FormError message={error} />
         <label className="flex flex-col gap-1 text-sm">
@@ -57,14 +57,14 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
       </form>
       <p className="text-sm text-muted">
         Don’t have an account?{' '}
-        <Link href="/register" className="text-primary">
+        <Link href="/register" className="text-gradient font-medium">
           Sign up
         </Link>
       </p>

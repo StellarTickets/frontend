@@ -103,7 +103,7 @@ export default function VerifyPage() {
 
   return (
     <div className="mx-auto max-w-lg px-6 py-16">
-      <h1 className="text-2xl font-semibold">Verify a ticket</h1>
+      <h1 className="font-heading text-3xl font-bold">Verify a ticket</h1>
       <p className="mt-2 text-muted">
         Enter the code from a ticket’s QR to check its on-chain owner and status before admitting
         entry. You must be staff on the event’s organization to verify or check in its tickets.
@@ -123,7 +123,7 @@ export default function VerifyPage() {
         <button
           type="submit"
           disabled={checking}
-          className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {checking ? 'Checking…' : 'Verify'}
         </button>
@@ -155,7 +155,7 @@ export default function VerifyPage() {
               <button
                 onClick={handleCheckIn}
                 disabled={actionBusy}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                className="rounded-md bg-gradient-sunset px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
               >
                 {actionBusy ? 'Working…' : 'Check in'}
               </button>

@@ -139,7 +139,7 @@ export default function MyTicketsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">My tickets</h1>
+      <h1 className="font-heading text-3xl font-bold">My tickets</h1>
       <div className="mt-4">
         <WalletConnectButton />
       </div>
@@ -149,7 +149,7 @@ export default function MyTicketsPage() {
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-primary">{notice}</p>}
+      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
 
       {loadingTickets ? (
         <p className="mt-8 text-muted">Loading…</p>
@@ -186,7 +186,7 @@ export default function MyTicketsPage() {
                           : { ticketId: ticket.id, type: 'transfer' },
                       )
                     }
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-gradient font-medium hover:underline"
                   >
                     Transfer
                   </button>
@@ -198,7 +198,7 @@ export default function MyTicketsPage() {
                           : { ticketId: ticket.id, type: 'resell' },
                       )
                     }
-                    className="text-sm text-primary hover:underline"
+                    className="text-sm text-gradient font-medium hover:underline"
                   >
                     List for resale
                   </button>
@@ -208,7 +208,7 @@ export default function MyTicketsPage() {
                 <button
                   onClick={() => handleCancelResale(ticket.id)}
                   disabled={busyTicketId === ticket.id}
-                  className="mt-3 text-sm text-primary hover:underline disabled:opacity-50"
+                  className="mt-3 text-sm text-gradient font-medium hover:underline disabled:opacity-50"
                 >
                   {busyTicketId === ticket.id ? 'Working…' : 'Cancel listing'}
                 </button>
@@ -226,7 +226,7 @@ export default function MyTicketsPage() {
                   <button
                     onClick={() => handleTransfer(ticket.id)}
                     disabled={busyTicketId === ticket.id}
-                    className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                    className="rounded-md bg-gradient-sunset px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
                   >
                     {busyTicketId === ticket.id ? 'Sending…' : 'Send'}
                   </button>
@@ -244,7 +244,7 @@ export default function MyTicketsPage() {
                   <button
                     onClick={() => handleListForResale(ticket.id)}
                     disabled={busyTicketId === ticket.id}
-                    className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                    className="rounded-md bg-gradient-sunset px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
                   >
                     {busyTicketId === ticket.id ? 'Listing…' : 'List'}
                   </button>
