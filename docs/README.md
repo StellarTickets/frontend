@@ -16,3 +16,9 @@
 - [ACCESSIBILITY.md](ACCESSIBILITY.md) — known gaps
 - [PERFORMANCE.md](PERFORMANCE.md) — canvas/marquee notes
 - [BROWSER_SUPPORT.md](BROWSER_SUPPORT.md) — supported browsers
+- [BRAND.md](BRAND.md) — mark, gradient, type, tone
+- [THIRD_PARTY.md](THIRD_PARTY.md) — external services in use
+- [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) — breakpoint approach
+- [FORMS.md](FORMS.md) — why there's no form library
+- [WALLET_INTEGRATION.md](WALLET_INTEGRATION.md) — Freighter wrapper
+- [MARKETPLACE.md](MARKETPLACE.md) — resale page notes
