@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { ApiError } from '@/lib/api';
 import { FormError } from '@/components/form-error';
+import { AuthLayout } from '@/components/auth-layout';
+import { TextField } from '@/components/text-field';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -24,62 +27,65 @@ export default function RegisterPage() {
       await register(email, password, name);
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Could not reach the server. Is the backend running?',
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 px-6 py-24">
-      <h1 className="font-heading text-3xl font-bold">Create your account</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <AuthLayout
+      title="Create your account"
+      subtitle="Issue tickets, buy them, or both — one account covers either side."
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <FormError message={error} />
-        <label className="flex flex-col gap-1 text-sm">
-          Name
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Password
-          <input
-            type="password"
-            required
-            minLength={10}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
-          />
-          <span className="text-xs text-muted">At least 10 characters.</span>
-        </label>
+        <TextField
+          label="Name"
+          icon={User}
+          autoComplete="name"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <TextField
+          label="Email"
+          icon={Mail}
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <TextField
+          label="Password"
+          icon={Lock}
+          type="password"
+          autoComplete="new-password"
+          required
+          minLength={10}
+          hint="At least 10 characters."
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+          className="mt-2 rounded-xl bg-gradient-sunset px-4 py-3 font-medium text-white shadow-lg shadow-violet/20 transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
-      <p className="text-sm text-muted">
+      <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{' '}
         <Link href="/login" className="text-gradient font-medium">
           Log in
         </Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 }
