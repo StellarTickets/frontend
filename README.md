@@ -58,3 +58,8 @@ npm run lint
 npx tsc --noEmit
 npm run build
 ```
+
+## More documentation
+
+See [`docs/`](docs/README.md) for architecture, components, styling,
+and FAQ.
