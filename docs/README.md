@@ -6,3 +6,13 @@
 - [DEPLOYMENT.md](DEPLOYMENT.md) — deployment checklist
 - [GLOSSARY.md](GLOSSARY.md) — terminology
 - [FAQ.md](FAQ.md) — frequently asked questions
+- [COMPONENTS.md](COMPONENTS.md) — component inventory
+- [ROUTING.md](ROUTING.md) — why there's no middleware-based auth
+- [STYLING.md](STYLING.md) — Tailwind v4 theme setup and fonts
+- [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) — auth context, no caching layer
+- [ERROR_HANDLING.md](ERROR_HANDLING.md) — ApiError and FormError
+- [SEO.md](SEO.md) — metadata, sitemap, OG image
+- [ENVIRONMENT.md](ENVIRONMENT.md) — env variables
+- [ACCESSIBILITY.md](ACCESSIBILITY.md) — known gaps
+- [PERFORMANCE.md](PERFORMANCE.md) — canvas/marquee notes
+- [BROWSER_SUPPORT.md](BROWSER_SUPPORT.md) — supported browsers
