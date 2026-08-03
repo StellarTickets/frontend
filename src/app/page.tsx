@@ -42,18 +42,6 @@ const INDUSTRY_ICONS: Record<Industry, React.ComponentType<{ className?: string 
 };
 
 const INDUSTRY_MARQUEE = INDUSTRIES.map((i) => ({ label: INDUSTRY_LABELS[i], icon: INDUSTRY_ICONS[i] }));
-const STACK_MARQUEE = [
-  { label: 'Stellar' },
-  { label: 'Soroban' },
-  { label: 'Freighter' },
-  { label: 'Next.js' },
-  { label: 'NestJS' },
-  { label: 'Prisma' },
-  { label: 'Rust' },
-  { label: 'PostgreSQL' },
-  { label: 'Tailwind CSS' },
-  { label: 'TypeScript' },
-];
 
 const STATS = [
   { value: '12', label: 'industries on one ticket model' },
@@ -152,9 +140,8 @@ export default function Home() {
           <TicketMockup />
         </div>
 
-        <div className="relative mt-4 space-y-3 py-2">
+        <div className="relative mt-4 py-2">
           <Marquee items={INDUSTRY_MARQUEE} />
-          <Marquee items={STACK_MARQUEE} reverse />
         </div>
 
         <div className="relative border-t border-border bg-surface/60">
