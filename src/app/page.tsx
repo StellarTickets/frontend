@@ -57,8 +57,8 @@ const STACK_MARQUEE = [
 
 const STATS = [
   { value: '12', label: 'industries on one ticket model' },
-  { value: '~5s', label: 'to settle a ticket on Stellar' },
-  { value: '0', label: 'private keys we ever hold' },
+  { value: '~5s', label: 'to settle a ticket on-chain' },
+  { value: '0', label: 'chances to fake a ticket' },
   { value: '3', label: 'open-source repos, fully public' },
 ];
 
@@ -87,14 +87,14 @@ const STEPS = [
 
 const SECURITY_HIGHLIGHTS = [
   {
-    icon: KeyRound,
-    title: 'Non-custodial',
-    body: 'We never touch a private key. Every action is signed in your own wallet.',
+    icon: ShieldCheck,
+    title: 'Live on-chain checks',
+    body: 'Verification and check-in read the contract directly — not a database we control.',
   },
   {
-    icon: ShieldCheck,
-    title: 'On-chain checks',
-    body: 'Verification and check-in read the contract directly — not a database we control.',
+    icon: KeyRound,
+    title: 'One scan, one entry',
+    body: 'Check-in is a one-way state change on-chain. A second scan of the same ticket is rejected.',
   },
   {
     icon: TrendingDown,
@@ -109,8 +109,8 @@ const FAQS = [
     a: 'To browse events and read ticket data, no. To buy, receive, or resell a ticket, you’ll connect a Stellar wallet (we support Freighter) the same way you’d connect a bank card — it’s a one-time setup per account.',
   },
   {
-    q: 'Is StellarTickets custodial — can you access my tickets or funds?',
-    a: 'No. We never store a private key. Every on-chain action is signed inside your own wallet before it’s submitted; see our security page for the exact flow.',
+    q: 'How is a ticket actually checked at the gate?',
+    a: 'Staff scan the ticket’s code and the app asks the contract directly for its current owner and status — not a cached copy in our own database. A screenshot or a used ticket doesn’t pass.',
   },
   {
     q: 'What actually stops scalping?',
@@ -131,7 +131,7 @@ export default function Home() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-border-bright bg-surface px-3 py-1 text-xs font-medium text-muted">
               <span className="h-1.5 w-1.5 rounded-full bg-gradient-sunset" />
-              Secure. Verifiable. Powered by Stellar.
+              Every ticket, verifiably real
             </p>
             <h1 className="mt-6 font-heading text-5xl font-bold tracking-tight text-balance sm:text-6xl">
               Tickets that can&apos;t be <span className="text-gradient">faked, duplicated,</span>{' '}
@@ -278,8 +278,8 @@ export default function Home() {
             Ready to issue your first ticket?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/85 sm:text-lg">
-            For events, travel, entertainment, and transportation — one non-custodial platform,
-            open source top to bottom.
+            For events, travel, entertainment, and transportation — one platform, open source top
+            to bottom.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <a

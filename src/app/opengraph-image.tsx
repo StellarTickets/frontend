@@ -38,7 +38,7 @@ export default function OpengraphImage() {
             maxWidth: 980,
           }}
         >
-          Secure. Verifiable. Powered by Stellar.
+          Tickets you can actually verify.
         </div>
         <div
           style={{

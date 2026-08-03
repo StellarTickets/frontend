@@ -44,13 +44,13 @@ export default function AboutPage() {
           </p>
         </div>
         <div className="rounded-xl border border-border bg-surface p-6">
-          <h3 className="font-heading font-semibold text-foreground">Non-custodial by design</h3>
+          <h3 className="font-heading font-semibold text-foreground">Fraud is revocable</h3>
           <p className="mt-2 text-sm text-muted">
-            We never hold your keys. Every transaction is signed in your own wallet — see our{' '}
+            An organizer can void a counterfeit or charged-back ticket on-chain — see our{' '}
             <Link href="/security" className="text-foreground underline underline-offset-2">
               security page
             </Link>{' '}
-            for the full flow.
+            for the full mechanics.
           </p>
         </div>
       </div>

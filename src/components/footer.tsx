@@ -36,8 +36,8 @@ export function Footer() {
           <div>
             <Logo className="text-foreground" />
             <p className="mt-3 max-w-xs text-sm text-muted">
-              Secure. Verifiable. Powered by Stellar. Blockchain ticketing infrastructure for
-              events, travel, entertainment, and transportation.
+              Blockchain ticketing infrastructure for events, travel, entertainment, and
+              transportation.
             </p>
           </div>
           {COLUMNS.map((column) => (
@@ -56,8 +56,8 @@ export function Footer() {
           ))}
         </div>
         <div className="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} StellarTickets. All tickets settle on Stellar.</p>
-          <p>Built on Soroban smart contracts — no custodial wallets, ever.</p>
+          <p>&copy; {new Date().getFullYear()} StellarTickets.</p>
+          <p>Open source, top to bottom.</p>
         </div>
       </div>
     </footer>

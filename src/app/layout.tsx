@@ -17,19 +17,19 @@ const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'StellarTickets — Secure. Verifiable. Powered by Stellar.',
+    default: 'StellarTickets — Tickets You Can Actually Verify',
     template: '%s · StellarTickets',
   },
   description: DESCRIPTION,
   openGraph: {
-    title: 'StellarTickets — Secure. Verifiable. Powered by Stellar.',
+    title: 'StellarTickets — Tickets You Can Actually Verify',
     description: DESCRIPTION,
     siteName: 'StellarTickets',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StellarTickets — Secure. Verifiable. Powered by Stellar.',
+    title: 'StellarTickets — Tickets You Can Actually Verify',
     description: DESCRIPTION,
   },
 };
