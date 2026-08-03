@@ -56,6 +56,7 @@ browser extension for any wallet-signed action.
 ```bash
 npm run lint
 npx tsc --noEmit
+npm test
 npm run build
 ```
 
