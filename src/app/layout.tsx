@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter } from 'next/font/google';
 import { Providers } from '@/components/providers';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
+import { CustomCursor } from '@/components/custom-cursor';
 import './globals.css';
 
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], weight: ['500', '700'] });
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
         <Providers>
+          <CustomCursor />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
