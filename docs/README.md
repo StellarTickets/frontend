@@ -22,3 +22,6 @@
 - [FORMS.md](FORMS.md) — why there's no form library
 - [WALLET_INTEGRATION.md](WALLET_INTEGRATION.md) — Freighter wrapper
 - [MARKETPLACE.md](MARKETPLACE.md) — resale page notes
+- [ANALYTICS.md](ANALYTICS.md) — none integrated
+- [I18N.md](I18N.md) — English only, for now
+- [DESIGN_HISTORY.md](DESIGN_HISTORY.md) — how the current look came about
