@@ -1,39 +1,112 @@
-/* Tailwind utilities + theme only — preflight (base reset) is intentionally
-   skipped so it doesn't clash with Chakra UI's own CSS reset/components. */
-@import "tailwindcss/theme" layer(theme);
-@import "tailwindcss/utilities" layer(utilities);
+@import "tailwindcss";
 
-* {
-  box-sizing: border-box;
+:root {
+  --background: #000000;
+  --surface: #150f22;
+  --surface-2: #1c1430;
+  --foreground: #f7f5fb;
+  --muted: #a79fbe;
+  --border: #2a2340;
+  --border-bright: #3d3160;
+
+  --violet: #a78bfa;
+  --magenta: #f472b6;
+  --amber: #f5b400;
+
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --accent: #f5b400;
+
+  /* Keep in sync with BRAND_GRADIENT in components/logo.tsx — same colors, same stops, same angle. */
+  --gradient-sunset: linear-gradient(135deg, var(--violet) 0%, var(--magenta) 55%, var(--amber) 100%);
+  --gradient-glow: radial-gradient(60% 60% at 50% 0%, rgba(167, 139, 250, 0.35), transparent 70%);
 }
 
-.chakra-ui-dark body {
-  background-color: #0b0d0c;
-  background-image:
-    radial-gradient(760px circle at 12% -8%, rgba(74, 226, 146, 0.16), transparent 60%),
-    radial-gradient(640px circle at 88% 12%, rgba(37, 99, 235, 0.12), transparent 55%);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-bright: var(--border-bright);
+  --color-violet: var(--violet);
+  --color-magenta: var(--magenta);
+  --color-amber: var(--amber);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
 }
 
-::selection {
-  background: rgba(74, 226, 146, 0.35);
+body {
+  background: var(--background);
+  color: var(--foreground);
 }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+.text-gradient {
+  background-image: var(--gradient-sunset);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+.bg-gradient-sunset {
+  background-image: var(--gradient-sunset);
 }
 
-::-webkit-scrollbar-thumb {
-  background: #2a2f2d;
-  border-radius: 999px;
+.border-gradient {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--gradient-sunset) border-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #3a413e;
+.ticket-notch {
+  position: relative;
+}
+.ticket-notch::before,
+.ticket-notch::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--background);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.ticket-notch::before {
+  left: -11px;
+}
+.ticket-notch::after {
+  right: -11px;
+}
+
+.mask-fade-x {
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+.animate-marquee-reverse {
+  animation: marquee 32s linear infinite reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-reverse {
+    animation: none;
+  }
 }
