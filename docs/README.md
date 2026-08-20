@@ -1,0 +1,27 @@
+# Docs index
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — non-custodial flow, auth state, page structure
+- [API.md](API.md) — which pages call which backend endpoints
+- [TESTING.md](TESTING.md) — Vitest coverage notes
+- [DEPLOYMENT.md](DEPLOYMENT.md) — deployment checklist
+- [GLOSSARY.md](GLOSSARY.md) — terminology
+- [FAQ.md](FAQ.md) — frequently asked questions
+- [COMPONENTS.md](COMPONENTS.md) — component inventory
+- [ROUTING.md](ROUTING.md) — why there's no middleware-based auth
+- [STYLING.md](STYLING.md) — Tailwind v4 theme setup and fonts
+- [STATE_MANAGEMENT.md](STATE_MANAGEMENT.md) — auth context, no caching layer
+- [ERROR_HANDLING.md](ERROR_HANDLING.md) — ApiError and FormError
+- [SEO.md](SEO.md) — metadata, sitemap, OG image
+- [ENVIRONMENT.md](ENVIRONMENT.md) — env variables
+- [ACCESSIBILITY.md](ACCESSIBILITY.md) — known gaps
+- [PERFORMANCE.md](PERFORMANCE.md) — canvas/marquee notes
+- [BROWSER_SUPPORT.md](BROWSER_SUPPORT.md) — supported browsers
+- [BRAND.md](BRAND.md) — mark, gradient, type, tone
+- [THIRD_PARTY.md](THIRD_PARTY.md) — external services in use
+- [RESPONSIVE_DESIGN.md](RESPONSIVE_DESIGN.md) — breakpoint approach
+- [FORMS.md](FORMS.md) — why there's no form library
+- [WALLET_INTEGRATION.md](WALLET_INTEGRATION.md) — Freighter wrapper
+- [MARKETPLACE.md](MARKETPLACE.md) — resale page notes
+- [ANALYTICS.md](ANALYTICS.md) — none integrated
+- [I18N.md](I18N.md) — English only, for now
+- [DESIGN_HISTORY.md](DESIGN_HISTORY.md) — how the current look came about

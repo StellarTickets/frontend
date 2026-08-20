@@ -1,59 +1,35 @@
 {
-  "name": "smartdrop-frontend",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "next dev",
-    "dev:stack": "bash scripts/dev-stack.sh",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage --coverage.include src/lib/soroban.ts",
-    "playwright": "playwright test --config e2e/playwright.config.ts",
-    "contributors:sync": "node scripts/sync-lernza-contributors.mjs",
-    "contributors:github-insights": "node scripts/record-lernza-github-coauthors.mjs"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@chakra-ui/next-js": "^2.4.2",
-    "@chakra-ui/react": "^2.10.4",
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
-    "@stellar/freighter-api": "^3.1.0",
-    "@stellar/stellar-base": "^15.0.0",
-    "@stellar/stellar-sdk": "^16.0.1",
-    "@tanstack/react-query": "^5.60.5",
-    "framer-motion": "^11.11.17",
-    "next": "15.5.18",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "recharts": "^3.9.0",
-    "soroban-client": "^1.0.1",
-    "stellar-plus": "^0.14.4",
-    "zustand": "^5.0.14"
+    "@stellar/freighter-api": "^6.0.1",
+    "lucide-react": "^1.28.0",
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.12.1",
-    "@chakra-ui/icons": "^2.2.4",
-    "@playwright/test": "^1.61.1",
-    "@tailwindcss/postcss": "^4.3.2",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^6.0.3",
-    "@vitest/coverage-v8": "4.1.9",
-    "autoprefixer": "^10.5.2",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "15.5.18",
-    "jsdom": "^29.1.1",
-    "postcss": "^8.5.16",
-    "tailwindcss": "^4.3.2",
-    "typescript": "^5.6.3",
-    "vitest": "^4.1.9"
+    "@vitejs/plugin-react": "^6.0.5",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "jsdom": "^30.0.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
