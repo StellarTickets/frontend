@@ -163,7 +163,8 @@ export default function MyTicketsPage() {
                 <div>
                   <p className="font-medium">{ticket.event?.name}</p>
                   <p className="text-sm text-muted">
-                    {ticket.ticketType?.name} · Seat {ticket.seat}
+                    {ticket.ticketType?.name} ·{' '}
+                    {ticket.seat ? `Seat ${ticket.seat}` : 'General admission'}
                   </p>
                 </div>
                 <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">

@@ -46,9 +46,20 @@ export function Footer() {
               <ul className="mt-3 flex flex-col gap-2 text-sm text-muted">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="hover:text-foreground">
-                      {link.label}
-                    </Link>
+                    {link.href.startsWith('http') ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-foreground"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className="hover:text-foreground">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

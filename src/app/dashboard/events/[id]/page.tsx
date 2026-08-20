@@ -56,11 +56,16 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   async function handleAddTicketType(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const quantity = Number(ttQuantity);
+    if (!Number.isFinite(quantity)) {
+      setError('Quantity must be a number.');
+      return;
+    }
     setSavingTicketType(true);
     try {
       const tt = await apiFetch<TicketType>(`/events/${id}/ticket-types`, {
         method: 'POST',
-        body: { name: ttName, price: ttPrice, quantityTotal: Number(ttQuantity) },
+        body: { name: ttName, price: ttPrice, quantityTotal: quantity },
       });
       setEvent((prev) => (prev ? { ...prev, ticketTypes: [...(prev.ticketTypes ?? []), tt] } : prev));
       setTtName('');
@@ -203,6 +208,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
           <input
             required
             inputMode="numeric"
+            pattern="[0-9]+"
             placeholder="1000"
             value={ttPrice}
             onChange={(e) => setTtPrice(e.target.value)}
@@ -214,6 +220,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
           <input
             required
             inputMode="numeric"
+            pattern="[0-9]+"
             placeholder="100"
             value={ttQuantity}
             onChange={(e) => setTtQuantity(e.target.value)}

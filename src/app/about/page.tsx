@@ -82,18 +82,24 @@ export default function AboutPage() {
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <a
             href="https://github.com/StellarTickets/blockchain"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gradient font-medium hover:underline"
           >
             Blockchain contract →
           </a>
           <a
             href="https://github.com/StellarTickets/backend"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gradient font-medium hover:underline"
           >
             Backend API →
           </a>
           <a
             href="https://github.com/StellarTickets/frontend"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gradient font-medium hover:underline"
           >
             This site →

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { apiFetch, clearToken, setToken } from './api';
+import { apiFetch, clearToken, getToken, setToken } from './api';
 import type { Me } from './types';
 
 interface AuthResponse {
@@ -25,6 +25,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    if (!getToken()) {
+      setUser(null);
+      return;
+    }
     try {
       const me = await apiFetch<Me>('/users/me');
       setUser(me);

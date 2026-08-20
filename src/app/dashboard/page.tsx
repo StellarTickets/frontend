@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [industry, setIndustry] = useState<(typeof INDUSTRIES)[number]>('CONCERTS');
   const stellarAccountRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -30,9 +31,14 @@ export default function DashboardPage() {
     if (!user) return;
 
     async function loadOrgs() {
-      const res = await apiFetch<Organization[]>('/organizations/mine');
-      setOrgs(res);
-      setLoadingOrgs(false);
+      try {
+        const res = await apiFetch<Organization[]>('/organizations/mine');
+        setOrgs(res);
+      } catch (err) {
+        setLoadError(err instanceof ApiError ? err.message : 'Could not load your organizations.');
+      } finally {
+        setLoadingOrgs(false);
+      }
     }
     void loadOrgs();
   }, [user]);
@@ -65,9 +71,15 @@ export default function DashboardPage() {
         <WalletConnectButton />
       </div>
 
+      {loadError && (
+        <div className="mt-8">
+          <FormError message={loadError} />
+        </div>
+      )}
+
       {loadingOrgs ? (
         <p className="mt-8 text-muted">Loading…</p>
-      ) : orgs.length === 0 ? (
+      ) : loadError ? null : orgs.length === 0 ? (
         <p className="mt-8 text-muted">You don’t have an organization yet — create one below.</p>
       ) : (
         <ul className="mt-8 flex flex-col gap-3">

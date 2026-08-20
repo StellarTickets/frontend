@@ -54,7 +54,11 @@ export default function VerifyPage() {
   }
 
   async function handleCheckIn() {
-    if (!result || !user?.stellarPublicKey) return;
+    if (!result) return;
+    if (!user?.stellarPublicKey) {
+      setError('Connect your wallet before checking in or revoking tickets.');
+      return;
+    }
     setError(null);
     setActionBusy(true);
     try {
@@ -77,7 +81,11 @@ export default function VerifyPage() {
   }
 
   async function handleRevoke() {
-    if (!result || !user?.stellarPublicKey) return;
+    if (!result) return;
+    if (!user?.stellarPublicKey) {
+      setError('Connect your wallet before checking in or revoking tickets.');
+      return;
+    }
     setError(null);
     setActionBusy(true);
     try {

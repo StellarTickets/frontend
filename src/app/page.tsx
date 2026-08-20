@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   Music,
   Plane,
@@ -269,18 +270,18 @@ export default function Home() {
             to bottom.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <a
+            <Link
               href="/register"
               className="rounded-full bg-white px-6 py-3 font-semibold text-neutral-900 hover:opacity-90"
             >
               Create your account
-            </a>
-            <a
+            </Link>
+            <Link
               href="/about"
               className="rounded-full border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10"
             >
               Learn more
-            </a>
+            </Link>
           </div>
         </div>
       </section>

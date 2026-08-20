@@ -16,6 +16,7 @@ export default function OrganizationPage({ params }: { params: Promise<{ id: str
   const [org, setOrg] = useState<Organization | null>(null);
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<(typeof INDUSTRIES)[number]>('CONCERTS');
@@ -37,6 +38,9 @@ export default function OrganizationPage({ params }: { params: Promise<{ id: str
       .then(([orgRes, eventsRes]) => {
         setOrg(orgRes);
         setEvents(eventsRes);
+      })
+      .catch((err) => {
+        setLoadError(err instanceof ApiError ? err.message : 'Could not load this organization.');
       })
       .finally(() => setLoadingData(false));
   }, [id, user]);
@@ -61,7 +65,15 @@ export default function OrganizationPage({ params }: { params: Promise<{ id: str
     }
   }
 
-  if (loading || !user || loadingData || !org) return null;
+  if (loading || !user || loadingData) return null;
+
+  if (loadError || !org) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <FormError message={loadError ?? 'Could not load this organization.'} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
