@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { apiFetch, clearToken, setToken } from './api';
+import { apiFetch, clearToken, getToken, setToken } from './api';
 import type { Me } from './types';
 
 interface AuthResponse {
@@ -25,6 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    // Anonymous visitors have no token, so this request can only 401. Firing it
+    // on every first page load costs a round trip, logs a spurious auth failure
+    // server-side, and reports a "failed" request in the browser console on a
+    // perfectly normal visit. Nothing is lost by skipping it: the catch below
+    // already resolves to the same null user.
+    if (!getToken()) {
+      setUser(null);
+      return;
+    }
     try {
       const me = await apiFetch<Me>('/users/me');
       setUser(me);
