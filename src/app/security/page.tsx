@@ -46,7 +46,9 @@ export default function SecurityPage() {
       <p className="mt-6 text-lg text-muted">
         Every claim below maps to a real function in the{' '}
         <a
-          href="https://github.com/StellarTickets/blockchain/blob/main/contracts/ticketing/src/lib.rs"
+          target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/StellarTickets/blockchain/blob/main/contracts/ticketing/src/lib.rs"
           className="text-foreground underline underline-offset-2"
         >
           ticketing contract
