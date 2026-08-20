@@ -1,0 +1,11 @@
+# For local orchestration alongside the backend and a Postgres instance,
+# see docker-compose.yml in the backend repo — this file only builds
+# the frontend image standalone.
+services:
+  frontend:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_STELLAR_NETWORK: testnet
