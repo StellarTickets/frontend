@@ -11,8 +11,59 @@ reads and writes through the
 This app never talks to Stellar/Soroban directly — every on-chain action goes
 through the backend and a browser wallet.
 
+## What is StellarTickets?
+
+StellarTickets is a ticketing platform where **every ticket is a blockchain
+asset**, not just a database row or a barcode someone could screenshot and
+reuse. That one design choice solves the problems that plague normal
+ticketing:
+
+- **Counterfeiting and duplicate entry** — a ticket's owner and status live
+  on the Stellar network, not in a database an insider could edit. The
+  `/verify` page checked by gate staff confirms both the QR code *and* the
+  on-chain record before letting anyone in, so a photographed or duplicated
+  ticket simply doesn't work.
+- **Scalping** — organizers set a resale price cap (e.g. "never more than
+  120% of face value") and an optional royalty on every resale, and the
+  Soroban contract enforces both automatically. No secondary-market app can
+  route around it, because the cap is on-chain, not a website's policy.
+- **Opaque resale** — when a ticket does resell, the payment settles
+  atomically on-chain: royalty to the organizer, remainder to the seller,
+  ownership to the buyer, all in one transaction or none of it happens.
+- **"Is this ticket real?" uncertainty** — anyone (an attendee, a scanner
+  app, another platform) can call the contract's read-only `verify_ticket`
+  and get an authoritative answer, without trusting StellarTickets' servers
+  to be honest about it.
+
+The same underlying model — an **event** that issues **tickets** which can be
+checked in, transferred, and optionally resold under organizer-set rules —
+covers all twelve industries the platform targets: concerts, flights, sports,
+festivals, conferences, buses, movie theaters, museums, tourist attractions,
+public transport, universities, and corporate events. A "ticket" is a
+festival wristband in one organizer's dashboard and a bus seat in another's;
+the contract and this app don't need to know the difference beyond a
+`category` label.
+
+**Who uses this app, specifically:**
+
+- **Organizers** sign up, create an organization, and use `/dashboard` to
+  create events, define ticket types (price, quantity, tier), and publish
+  the event on-chain — which is what actually opens sales.
+- **Attendees** register, buy or receive tickets, and use `/my-tickets` to
+  view them, transfer them to someone else, or list them for resale;
+  `/marketplace` is where they browse other attendees' resale listings.
+- **Gate staff** use `/verify` on event day to scan a ticket's QR code and
+  check it in (or revoke it, if it's fraudulent) — a check-in can never be
+  replayed, so the same ticket can't admit two people.
+
+This repo is the surface all three of those people actually touch — see
+[Pages](#pages) below for the full route-by-route breakdown, and the
+[blockchain repo's "why one contract for every industry"](https://github.com/StellarTickets/blockchain#why-one-contract-for-every-industry)
+section for how the on-chain side of this design works.
+
 ## Table of contents
 
+- [What is StellarTickets?](#what-is-stellartickets)
 - [New to this stack? Start here](#new-to-this-stack-start-here)
 - [Non-custodial wallet flow](#non-custodial-wallet-flow)
 - [How this fits with the other repos](#how-this-fits-with-the-other-repos)
