@@ -1,14 +1,15 @@
 /** The site's one gradient, defined here in the raw values it needs everywhere: Tailwind's `bg-gradient-sunset` class in the browser, and this exact CSS string for the icon/opengraph-image generators, which don't process Tailwind. */
+import { useId } from 'react';
+
 export const BRAND_GRADIENT = 'linear-gradient(135deg, #a78bfa 0%, #f472b6 55%, #f5b400 100%)';
 
-/**
- * The StellarTickets mark: a solid ticket-stub shape in the brand gradient
- * with a dashed tear-line and a sparkle accent, with "ST" lettering
- * overlaid as HTML text (satori, used by icon.tsx / opengraph-image.tsx,
- * doesn't support SVG <text> — only the shape below is SVG; the letters are
- * a plain positioned span so they render the same way everywhere).
- */
-export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
+type LogoMarkProps = { size?: number; className?: string };
+
+function LogoMarkSvg({
+  size = 32,
+  className,
+  gradientId,
+}: LogoMarkProps & { gradientId: string }) {
   const height = (size * 72) / 100;
   return (
     <div
@@ -17,7 +18,7 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
     >
       <svg viewBox="0 0 100 72" width={size} height={height} aria-hidden="true">
         <defs>
-          <linearGradient id="st-mark-grad" x1="0" y1="0" x2="100" y2="72" gradientUnits="userSpaceOnUse">
+          <linearGradient id={gradientId} x1="0" y1="0" x2="100" y2="72" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#a78bfa" />
             <stop offset="55%" stopColor="#f472b6" />
             <stop offset="100%" stopColor="#f5b400" />
@@ -25,7 +26,7 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
         </defs>
         <path
           d="M6 16C6 11.6 9.6 8 14 8H86C90.4 8 94 11.6 94 16V26C90.7 27.4 88.5 30.6 88.5 34.5C88.5 38.4 90.7 41.6 94 43V54C94 58.4 90.4 62 86 62H14C9.6 62 6 58.4 6 54V43C9.3 41.6 11.5 38.4 11.5 34.5C11.5 30.6 9.3 27.4 6 26V16Z"
-          fill="url(#st-mark-grad)"
+          fill={`url(#${gradientId})`}
         />
         <path
           d="M64 8V62"
@@ -63,6 +64,27 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
       </div>
     </div>
   );
+}
+
+/**
+ * The StellarTickets mark: a solid ticket-stub shape in the brand gradient
+ * with a dashed tear-line and a sparkle accent, with "ST" lettering
+ * overlaid as HTML text (satori, used by icon.tsx / opengraph-image.tsx,
+ * doesn't support SVG <text> — only the shape below is SVG; the letters are
+ * a plain positioned span so they render the same way everywhere).
+ */
+export function LogoMark({ size = 32, className }: LogoMarkProps) {
+  const id = useId();
+  return <LogoMarkSvg size={size} className={className} gradientId={`st-mark-grad-${id}`} />;
+}
+
+/** Use only in ImageResponse trees, whose renderer does not support React hooks. */
+export function LogoMarkForImageResponse({
+  size = 32,
+  className,
+  gradientId,
+}: LogoMarkProps & { gradientId: string }) {
+  return <LogoMarkSvg size={size} className={className} gradientId={gradientId} />;
 }
 
 export function Logo({ className }: { className?: string }) {
