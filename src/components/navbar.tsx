@@ -80,6 +80,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={active ? 'page' : undefined}
                 className={`relative py-1 transition-colors hover:text-foreground ${
                   active ? 'font-medium text-foreground' : ''
                 }`}
@@ -134,6 +135,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
+              aria-current={pathname === link.href ? 'page' : undefined}
               className={`rounded-xl px-4 py-3 text-sm transition-colors hover:bg-background ${
                 pathname === link.href ? 'font-medium text-foreground' : 'text-muted'
               }`}
