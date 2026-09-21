@@ -226,7 +226,7 @@ export default function MyTicketsPage() {
                   <button
                     onClick={() => handleTransfer(ticket.id)}
                     disabled={busyTicketId === ticket.id}
-                    className="rounded-md bg-gradient-sunset px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                    className="rounded-md bg-gradient-action px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
                   >
                     {busyTicketId === ticket.id ? 'Sending…' : 'Send'}
                   </button>
@@ -244,7 +244,7 @@ export default function MyTicketsPage() {
                   <button
                     onClick={() => handleListForResale(ticket.id)}
                     disabled={busyTicketId === ticket.id}
-                    className="rounded-md bg-gradient-sunset px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                    className="rounded-md bg-gradient-action px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
                   >
                     {busyTicketId === ticket.id ? 'Listing…' : 'List'}
                   </button>
