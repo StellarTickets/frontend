@@ -31,11 +31,13 @@ export function ParticleNetwork() {
 
     function resize() {
       const rect = canvas!.getBoundingClientRect();
+      const widthChanged = Math.abs(rect.width - width) > 1;
       width = rect.width;
       height = rect.height;
       canvas!.width = width * devicePixelRatio;
       canvas!.height = height * devicePixelRatio;
       ctx!.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      return widthChanged;
     }
 
     function seed() {
@@ -112,8 +114,7 @@ export function ParticleNetwork() {
     if (!reducedMotion.matches) start();
 
     const observer = new ResizeObserver(() => {
-      resize();
-      seed();
+      if (resize()) seed();
     });
     observer.observe(canvas);
 
