@@ -37,17 +37,17 @@ export function AudienceToggle() {
 
   return (
     <div>
-      <div className="relative inline-flex rounded-full border border-border bg-surface p-1">
+      <div className="relative grid w-full max-w-sm grid-cols-2 rounded-full border border-border bg-surface p-1">
         <div
-          className={`absolute top-1 bottom-1 left-1 w-[168px] rounded-full bg-gradient-sunset transition-transform duration-300 ease-out ${
-            active === 'organizers' ? 'translate-x-[168px]' : 'translate-x-0'
+          className={`absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-gradient-sunset transition-transform duration-300 ease-out ${
+            active === 'organizers' ? 'translate-x-full' : 'translate-x-0'
           }`}
         />
         {(Object.keys(CONTENT) as AudienceKey[]).map((key) => (
           <button
             key={key}
             onClick={() => setActive(key)}
-            className={`relative z-10 w-[168px] rounded-full px-4 py-2.5 text-sm font-semibold transition-colors duration-300 ${
+            className={`relative z-10 min-w-0 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors duration-300 ${
               active === key ? 'text-white' : 'text-muted hover:text-foreground'
             }`}
           >
