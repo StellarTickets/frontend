@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { LogoMark } from '@/components/logo';
+import { LogoMarkForImageResponse } from '@/components/logo';
 
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
@@ -18,7 +18,7 @@ export default function Icon() {
         }}
       >
         {/* Same mark as components/logo.tsx and opengraph-image.tsx — not a stand-in. */}
-        <LogoMark size={30} />
+        <LogoMarkForImageResponse size={30} gradientId="st-app-icon-grad" />
       </div>
     ),
     { ...size },
