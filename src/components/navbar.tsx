@@ -106,7 +106,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-full bg-gradient-sunset px-4 py-1.5 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90"
+                className="rounded-full bg-gradient-action px-4 py-1.5 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90"
               >
                 Get started
               </Link>
@@ -160,7 +160,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-full bg-gradient-sunset px-4 py-3 text-center text-sm font-medium text-white shadow-lg shadow-violet/20"
+                  className="rounded-full bg-gradient-action px-4 py-3 text-center text-sm font-medium text-white shadow-lg shadow-violet/20"
                 >
                   Get started
                 </Link>

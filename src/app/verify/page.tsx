@@ -123,7 +123,7 @@ export default function VerifyPage() {
         <button
           type="submit"
           disabled={checking}
-          className="rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-gradient-action px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {checking ? 'Checking…' : 'Verify'}
         </button>
@@ -155,7 +155,7 @@ export default function VerifyPage() {
               <button
                 onClick={handleCheckIn}
                 disabled={actionBusy}
-                className="rounded-md bg-gradient-sunset px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                className="rounded-md bg-gradient-action px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
               >
                 {actionBusy ? 'Working…' : 'Check in'}
               </button>

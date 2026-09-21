@@ -162,7 +162,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         <button
           onClick={handlePublish}
           disabled={publishing}
-          className="mt-6 rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+          className="mt-6 rounded-md bg-gradient-action px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {publishing ? 'Publishing…' : 'Publish event on-chain'}
         </button>
@@ -271,7 +271,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             <button
               type="submit"
               disabled={issuing}
-              className="self-start rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+              className="self-start rounded-md bg-gradient-action px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
             >
               {issuing ? 'Issuing…' : 'Issue ticket'}
             </button>

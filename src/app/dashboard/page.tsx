@@ -142,7 +142,7 @@ export default function DashboardPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="self-start rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+          className="self-start rounded-md bg-gradient-action px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Creating…' : 'Create organization'}
         </button>

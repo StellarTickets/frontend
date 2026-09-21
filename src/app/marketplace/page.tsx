@@ -100,7 +100,7 @@ export default function MarketplacePage() {
                 <button
                   onClick={() => handleBuy(listing.ticketId)}
                   disabled={buyingTicketId === listing.ticketId}
-                  className="rounded-md bg-gradient-sunset px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                  className="rounded-md bg-gradient-action px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
                 >
                   {buyingTicketId === listing.ticketId ? 'Buying…' : 'Buy'}
                 </button>
