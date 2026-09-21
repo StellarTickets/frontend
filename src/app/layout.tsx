@@ -5,7 +5,7 @@ import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import './globals.css';
 
-const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], weight: ['500', '700'] });
+const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], weight: ['500', '600', '700'] });
 const body = Inter({ variable: '--font-body', subsets: ['latin'] });
 
 const DESCRIPTION =
