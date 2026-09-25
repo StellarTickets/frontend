@@ -18,10 +18,38 @@ export default function DashboardPage() {
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const slugEditedRef = useRef(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
   const [industry, setIndustry] = useState<(typeof INDUSTRIES)[number]>('CONCERTS');
   const stellarAccountRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  function slugify(value: string) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/[\s-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setName(value);
+    if (!slugEditedRef.current) {
+      setSlug(slugify(value));
+    }
+  }
+
+  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    slugEditedRef.current = true;
+    setSlug(e.target.value);
+    setSlugError(null);
+  }
+
+  const SLUG_VALIDATION_MESSAGE =
+    'Use lowercase letters, numbers, and single hyphens between words (e.g. my-organization).';
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
@@ -50,6 +78,7 @@ export default function DashboardPage() {
       setOrgs((prev) => [org, ...prev]);
       setName('');
       setSlug('');
+      slugEditedRef.current = false;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not create the organization.');
     } finally {
@@ -96,7 +125,7 @@ export default function DashboardPage() {
           <input
             required
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
             className="rounded-md border border-border bg-surface px-3 py-2"
           />
         </label>
@@ -107,9 +136,16 @@ export default function DashboardPage() {
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             placeholder="my-organization"
             value={slug}
-            onChange={(e) => setSlug(e.target.value)}
+            onChange={handleSlugChange}
+            onInvalid={(e) => e.currentTarget.setCustomValidity(SLUG_VALIDATION_MESSAGE)}
+            onInput={(e) => e.currentTarget.setCustomValidity('')}
+            aria-describedby="slug-help"
             className="rounded-md border border-border bg-surface px-3 py-2"
           />
+          <span id="slug-help" className="text-xs text-muted">
+            {slug ? `stellartickets.netlify.app/${slug}` : 'This will form your organization’s URL.'}
+          </span>
+          {slugError && <span className="text-xs text-red-500">{slugError}</span>}
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Industry
