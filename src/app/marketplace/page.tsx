@@ -84,30 +84,41 @@ export default function MarketplacePage() {
         <p className="mt-8 text-muted">No tickets are listed for resale right now.</p>
       ) : (
         <ul className="mt-8 flex flex-col gap-3">
-          {listings.map((listing) => (
-            <li
-              key={listing.id}
-              className="flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <p className="break-words font-medium">{listing.ticket.event.name}</p>
-                <p className="break-words text-sm text-muted">
-                  {listing.ticket.ticketType.name} · {listing.ticket.event.venue} · sold by{' '}
-                  {listing.seller.name}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-4">
-                <span className="font-mono">{listing.price}</span>
-                <Button
-                  onClick={() => handleBuy(listing.ticketId)}
-                  loading={buyingTicketId === listing.ticketId}
-                  className="text-sm"
-                >
-                  {buyingTicketId === listing.ticketId ? 'Buying…' : 'Buy'}
-                </Button>
-              </div>
-            </li>
-          ))}
+          {listings.map((listing) => {
+            const isOwnListing = listing.sellerId === user.id;
+            return (
+              <li
+                key={listing.id}
+                className="flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="break-words font-medium">{listing.ticket.event.name}</p>
+                    {isOwnListing && (
+                      <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                        Your listing
+                      </span>
+                    )}
+                  </div>
+                  <p className="break-words text-sm text-muted">
+                    {listing.ticket.ticketType.name} · {listing.ticket.event.venue} · sold by{' '}
+                    {listing.seller.name}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-4">
+                  <span className="font-mono">{listing.price}</span>
+                  <Button
+                    onClick={() => handleBuy(listing.ticketId)}
+                    loading={buyingTicketId === listing.ticketId}
+                    disabled={isOwnListing}
+                    className="text-sm"
+                  >
+                    {buyingTicketId === listing.ticketId ? 'Buying…' : 'Buy'}
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
