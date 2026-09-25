@@ -11,6 +11,7 @@ import {
   type EventRecord,
   type Organization,
 } from "@/lib/types";
+import { formatEventDate } from "@/lib/event-details";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/button";
 import { StatusBadge } from "@/components/status-badge";
@@ -36,16 +37,12 @@ export default function OrganizationPage({
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState<(typeof INDUSTRIES)[number]>('CONCERTS');
-  const [venue, setVenue] = useState('');
-  const [startsAt, setStartsAt] = useState('');
-  const [endsAt, setEndsAt] = useState('');
   const [name, setName] = useState("");
   const [category, setCategory] =
     useState<(typeof INDUSTRIES)[number]>("CONCERTS");
   const [venue, setVenue] = useState("");
   const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
   const [resaleCapPercent, setResaleCapPercent] = useState("120");
   const [royaltyPercent, setRoyaltyPercent] = useState("5");
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +70,10 @@ export default function OrganizationPage({
     setError(null);
 
     if (endsAt && new Date(endsAt) <= new Date(startsAt)) {
-      setError('Ends at must be after Starts at');
+      setError("Ends at must be after Starts at");
+      return;
+    }
+
     const resaleCap = Number(resaleCapPercent);
     const royalty = Number(royaltyPercent);
     if (
@@ -100,7 +100,6 @@ export default function OrganizationPage({
     setSubmitting(true);
     try {
       const event = await apiFetch<EventRecord>(`/organizations/${id}/events`, {
-        method: 'POST',
         method: "POST",
         body: {
           name,
@@ -108,13 +107,6 @@ export default function OrganizationPage({
           venue,
           startsAt: new Date(startsAt).toISOString(),
           ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
-        },
-      });
-      setEvents((prev) => [event, ...prev]);
-      setName('');
-      setVenue('');
-      setStartsAt('');
-      setEndsAt('');
           maxResaleMultiplierBps: Math.round(resaleCap * 100),
           royaltyBps: Math.round(royalty * 100),
         },
@@ -123,6 +115,7 @@ export default function OrganizationPage({
       setName("");
       setVenue("");
       setStartsAt("");
+      setEndsAt("");
       setResaleCapPercent("120");
       setRoyaltyPercent("5");
     } catch (err) {
@@ -135,6 +128,10 @@ export default function OrganizationPage({
   }
 
   if (loading || !user || loadingData || !org) return null;
+
+  const sortedEvents = [...events].sort(
+    (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -149,11 +146,11 @@ export default function OrganizationPage({
       <h1 className="font-heading text-3xl font-bold">{org.name}</h1>
 
       <h2 className="mt-10 font-heading text-xl font-bold">Events</h2>
-      {events.length === 0 ? (
+      {sortedEvents.length === 0 ? (
         <p className="mt-4 text-muted">No events yet — create one below.</p>
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
-          {events.map((event) => (
+          {sortedEvents.map((event) => (
             <li key={event.id}>
               <Link
                 href={`/dashboard/events/${event.id}`}
@@ -163,7 +160,9 @@ export default function OrganizationPage({
                   <span className="font-medium">{event.name}</span>
                   <StatusBadge status={event.status} />
                 </div>
-                <p className="mt-1 text-sm text-muted">{event.venue}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {formatEventDate(event.startsAt)} · {event.venue}
+                </p>
               </Link>
             </li>
           ))}
@@ -226,12 +225,7 @@ export default function OrganizationPage({
             className="rounded-md border border-border bg-surface px-3 py-2"
           />
         </label>
-        <Button
-          type="submit"
-          loading={submitting}
-          className="self-start"
-        >
-          {submitting ? 'Creating…' : 'Create event'}
+        <label className="flex flex-col gap-1 text-sm">
           Resale cap (% of face value)
           <input
             required
