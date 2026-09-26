@@ -26,6 +26,11 @@ export class NetworkError extends ApiError {
 /** Default per-request timeout; override with `RequestOptions.timeoutMs`. */
 export const DEFAULT_TIMEOUT_MS = 15_000;
 
+/** True when the backend rejected our credentials (expired / invalid JWT). */
+export function isUnauthorized(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 401;
+}
+
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return window.localStorage.getItem(TOKEN_KEY);
