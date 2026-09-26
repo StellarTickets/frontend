@@ -1,8 +1,8 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import type { EventRecord, TicketType } from '@/lib/types';
@@ -17,7 +17,6 @@ import { buildPublishSummary } from '@/lib/event-details';
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, loading } = useAuth();
-  const router = useRouter();
 
   const [event, setEvent] = useState<EventRecord | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
@@ -37,9 +36,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   const [issueSeat, setIssueSeat] = useState('');
   const [issuing, setIssuing] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
   async function loadEvent() {
     const res = await apiFetch<EventRecord>(`/events/${id}`);

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { FormError } from '@/components/form-error';
@@ -23,7 +23,6 @@ interface VerifyResult {
 
 export default function VerifyPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [code, setCode] = useState('');
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +30,7 @@ export default function VerifyPage() {
   const [actionBusy, setActionBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
   async function lookup(ticketCode: string) {
     setError(null);

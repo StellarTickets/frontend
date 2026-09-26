@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch } from '@/lib/api';
 import { actionErrorMessage } from '@/lib/action-error';
 import { signAndSubmit } from '@/lib/onchain';
@@ -13,16 +13,13 @@ import { Button } from '@/components/button';
 
 export default function MarketplacePage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [listings, setListings] = useState<ResaleListing[]>([]);
   const [loadingListings, setLoadingListings] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [buyingTicketId, setBuyingTicketId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
   useEffect(() => {
     if (!user) return;
