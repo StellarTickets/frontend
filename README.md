@@ -173,6 +173,7 @@ See [`.env.example`](.env.example) for the full list.
 | Variable | Meaning |
 |---|---|
 | `NEXT_PUBLIC_API_URL` | Base URL of the [backend](https://github.com/StellarTickets/backend) API |
+| `NEXT_PUBLIC_APP_URL` | Public origin this frontend is served from, used for canonical/OG URLs and `sitemap.xml`. **Must be the public origin in production** (e.g. `https://stellartickets.app`) — if it's left unset, production emits `http://localhost:3001` URLs |
 | `NEXT_PUBLIC_STELLAR_NETWORK` | `testnet` / `futurenet` / `mainnet` — must match the backend's `STELLAR_NETWORK` and whatever network the user's Freighter wallet is set to, or signed transactions will be rejected |
 | `NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE` | The matching network passphrase (e.g. `"Test SDF Network ; September 2015"` for testnet), used when building/verifying transactions client-side |
 | `NEXT_PUBLIC_TICKETING_CONTRACT_ID` | *Optional.* The deployed `ticketing` contract address (same as the backend's `TICKETING_CONTRACT_ID`). When set, published events link to the contract on stellar.expert (testnet/mainnet only) |
