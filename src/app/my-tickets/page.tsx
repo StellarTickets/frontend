@@ -84,6 +84,20 @@ export default function MyTicketsPage() {
     }
   }
 
+  /**
+   * Refreshes the list after an on-chain action has already been confirmed.
+   * Runs outside the action's try/catch so a failed reload never reports the
+   * (already completed) action as failed and invites a retry (#62).
+   */
+  async function reloadAfterAction(doneMessage: string) {
+    try {
+      setTickets(await apiFetch<Ticket[]>('/tickets/mine'));
+      setNotice(doneMessage);
+    } catch {
+      setNotice(`${doneMessage} The list could not refresh; reload the page to see the latest state.`);
+    }
+  }
+
   useEffect(() => {
     if (!user) return;
     async function run() {
