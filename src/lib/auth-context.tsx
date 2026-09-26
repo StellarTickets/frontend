@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { apiFetch, clearToken, setToken } from './api';
+import { apiFetch, clearToken, isUnauthorized, setToken } from './api';
 import type { Me } from './types';
 
 interface AuthResponse {
@@ -28,7 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await apiFetch<Me>('/users/me');
       setUser(me);
-    } catch {
+    } catch (err) {
+      // A 401 means the stored JWT is expired or invalid: drop it so later
+      // requests stop sending a dead Authorization header (#42). Other
+      // failures (network, 5xx) keep the token — the session may be fine.
+      if (isUnauthorized(err)) clearToken();
       setUser(null);
     }
   }, []);
