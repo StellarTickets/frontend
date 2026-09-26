@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { apiFetch, clearToken, isUnauthorized, setToken } from './api';
+import { apiFetch, clearToken, getToken, isUnauthorized, setToken } from './api';
 import type { Me } from './types';
 
 interface AuthResponse {
@@ -25,6 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    // No stored token: we're signed out, so skip the /users/me round-trip
+    // that would only fail on every page load (#42).
+    if (!getToken()) {
+      setUser(null);
+      return;
+    }
     try {
       const me = await apiFetch<Me>('/users/me');
       setUser(me);
