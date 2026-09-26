@@ -23,6 +23,7 @@ describe('apiFetch timeout & cancellation (#54)', () => {
     const err = await apiFetch('/events', { auth: false, timeoutMs: 20 }).catch((e) => e);
     expect(err).toBeInstanceOf(NetworkError);
     expect(err).toBeInstanceOf(ApiError);
+    if (!(err instanceof ApiError)) throw err;
     expect(err.status).toBe(0);
     expect(err.message).toMatch(/took too long/);
   });
@@ -31,6 +32,7 @@ describe('apiFetch timeout & cancellation (#54)', () => {
     global.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch')) as unknown as typeof fetch;
     const err = await apiFetch('/events', { auth: false }).catch((e) => e);
     expect(err).toBeInstanceOf(NetworkError);
+    if (!(err instanceof NetworkError)) throw err;
     expect(err.message).toMatch(/Could not reach the server/);
   });
 
@@ -41,6 +43,7 @@ describe('apiFetch timeout & cancellation (#54)', () => {
     controller.abort();
     const err = await pending.catch((e) => e);
     expect(err).not.toBeInstanceOf(NetworkError);
+    if (!(err instanceof Error)) throw err;
     expect(err.name).toBe('AbortError');
   });
 
