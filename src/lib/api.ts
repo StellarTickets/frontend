@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+import { resolveEnv } from './env';
+
+const API_URL = resolveEnv('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3000');
 const TOKEN_KEY = 'stellartickets.token';
 
 export class ApiError extends Error {
