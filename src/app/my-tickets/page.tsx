@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { ticketingContractUrl } from '@/lib/event-details';
-import type { Ticket } from '@/lib/types';
 import { INDUSTRY_LABELS, type Ticket } from '@/lib/types';
 import { formatEventDate, maxResalePrice } from '@/lib/event-details';
 import { FormError } from '@/components/form-error';
@@ -166,8 +165,6 @@ export default function MyTicketsPage() {
   }
 
   async function handleTransfer(ticketId: string, recipient: TransferRecipient) {
-  async function handleTransfer(e: FormEvent, ticketId: string) {
-    e.preventDefault();
     const wallet = requireWallet();
     if (!wallet) return;
     setError(null);
@@ -198,11 +195,8 @@ export default function MyTicketsPage() {
   }
 
   async function handleListForResale(ticket: Ticket) {
-    const ticketId = ticket.id;
-  async function handleListForResale(ticketId: string) {
     if (!/^[1-9]\d*$/.test(resalePrice)) return;
-  async function handleListForResale(e: FormEvent, ticketId: string) {
-    e.preventDefault();
+    const ticketId = ticket.id;
     const wallet = requireWallet();
     if (!wallet) return;
     const cap = maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps);
@@ -323,6 +317,7 @@ export default function MyTicketsPage() {
                   View on-chain (ticket #{ticket.chainTicketId})
                   <ExternalLink size={12} aria-hidden="true" />
                 </a>
+              )}
               {ticket.status === 'VALID' ? (
                 <div className="mt-3">
                   <TicketQr value={ticket.qrSecret} />
@@ -367,10 +362,7 @@ export default function MyTicketsPage() {
               )}
 
               {activeAction?.ticketId === ticket.id && activeAction.type === 'transfer' && (
-                <form
-                  onSubmit={(e) => handleTransfer(e, ticket.id)}
-                  className="mt-3 flex gap-2"
-                >
+                <div className="mt-3 flex gap-2">
                   <label htmlFor={`transfer-email-${ticket.id}`} className="sr-only">
                     Recipient email
                   </label>
@@ -410,17 +402,11 @@ export default function MyTicketsPage() {
                     size="sm"
                   >
                     {busyTicketId === ticket.id ? 'Sending…' : 'Confirm'}
-                  <Button type="submit" loading={busyTicketId === ticket.id} size="sm">
-                    {busyTicketId === ticket.id ? 'Sending…' : 'Send'}
                   </Button>
-                </form>
+                </div>
               )}
               {activeAction?.ticketId === ticket.id && activeAction.type === 'resell' && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                <form
-                  onSubmit={(e) => handleListForResale(e, ticket.id)}
-                  className="mt-3 flex gap-2"
-                >
                   <label htmlFor={`resale-price-${ticket.id}`} className="sr-only">
                     Asking price
                   </label>
@@ -440,7 +426,6 @@ export default function MyTicketsPage() {
                     disabled={!isValidResalePrice}
                     size="sm"
                   >
-                  <Button type="submit" loading={busyTicketId === ticket.id} size="sm">
                     {busyTicketId === ticket.id ? 'Listing…' : 'List'}
                   </Button>
                   {maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps) !==
@@ -451,7 +436,6 @@ export default function MyTicketsPage() {
                     </p>
                   )}
                 </div>
-                </form>
               )}
             </li>
           ))}
