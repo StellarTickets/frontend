@@ -44,12 +44,14 @@ export default function RegisterPage() {
       subtitle="Issue tickets, buy them, or both — one account covers either side."
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <FormError message={error} />
+        <FormError message={error} id="register-form-error" />
         <TextField
           label="Name"
           icon={User}
           autoComplete="name"
           required
+          aria-describedby={error ? 'register-form-error' : undefined}
+          aria-invalid={error ? true : undefined}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -59,6 +61,8 @@ export default function RegisterPage() {
           type="email"
           autoComplete="email"
           required
+          aria-describedby={error ? 'register-form-error' : undefined}
+          aria-invalid={error ? true : undefined}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -68,6 +72,8 @@ export default function RegisterPage() {
           type="password"
           autoComplete="new-password"
           required
+          aria-describedby={error ? 'register-form-error' : undefined}
+          aria-invalid={error ? true : undefined}
           minLength={10}
           hint="At least 10 characters."
           value={password}

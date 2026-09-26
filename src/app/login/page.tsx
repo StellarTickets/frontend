@@ -40,13 +40,15 @@ export default function LoginPage() {
   return (
     <AuthLayout title="Welcome back" subtitle="Log in to manage your tickets and organizations.">
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <FormError message={error} />
+        <FormError message={error} id="login-form-error" />
         <TextField
           label="Email"
           icon={Mail}
           type="email"
           autoComplete="email"
           required
+          aria-describedby={error ? 'login-form-error' : undefined}
+          aria-invalid={error ? true : undefined}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -56,6 +58,8 @@ export default function LoginPage() {
           type="password"
           autoComplete="current-password"
           required
+          aria-describedby={error ? 'login-form-error' : undefined}
+          aria-invalid={error ? true : undefined}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
