@@ -176,6 +176,7 @@ export default function MyTicketsPage() {
     setError(null);
     setNotice(null);
     setBusyTicketId(ticketId);
+    let doneMessage: string | null = null;
     try {
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${ticketId}/transfer`,
@@ -187,16 +188,16 @@ export default function MyTicketsPage() {
           body: { toUserId: recipient.id, signedXdr },
         }),
       );
-      setNotice(`Ticket transferred to ${transferEmail}.`);
+      doneMessage = `Ticket transferred to ${transferEmail}.`;
       setActiveAction(null);
       setPendingTransfer(null);
       setTransferEmail('');
-      await loadTickets();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not transfer this ticket.');
     } finally {
       setBusyTicketId(null);
     }
+    if (doneMessage) await reloadAfterAction(doneMessage);
   }
 
   async function handleListForResale(ticket: Ticket) {
@@ -215,6 +216,7 @@ export default function MyTicketsPage() {
     setError(null);
     setNotice(null);
     setBusyTicketId(ticketId);
+    let doneMessage: string | null = null;
     try {
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${ticketId}/list-resale`,
@@ -226,15 +228,15 @@ export default function MyTicketsPage() {
           body: { price: resalePrice, signedXdr },
         }),
       );
-      setNotice('Ticket listed on the marketplace.');
+      doneMessage = 'Ticket listed on the marketplace.';
       setActiveAction(null);
       setResalePrice('');
-      await loadTickets();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not list this ticket.');
     } finally {
       setBusyTicketId(null);
     }
+    if (doneMessage) await reloadAfterAction(doneMessage);
   }
 
   async function handleCancelResale(ticketId: string) {
@@ -243,6 +245,7 @@ export default function MyTicketsPage() {
     setError(null);
     setNotice(null);
     setBusyTicketId(ticketId);
+    let doneMessage: string | null = null;
     try {
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${ticketId}/cancel-resale`,
@@ -254,13 +257,13 @@ export default function MyTicketsPage() {
           body: { signedXdr },
         }),
       );
-      setNotice('Listing cancelled.');
-      await loadTickets();
+      doneMessage = 'Listing cancelled.';
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not cancel this listing.');
     } finally {
       setBusyTicketId(null);
     }
+    if (doneMessage) await reloadAfterAction(doneMessage);
   }
 
   if (loading || !user) return null;
