@@ -10,9 +10,16 @@ const NETWORK_PASSPHRASE =
 
 export class WalletError extends Error {}
 
+export const FREIGHTER_INSTALL_URL = 'https://www.freighter.app/';
+
+/** Resolves `false` (never throws) when the Freighter extension is missing or unreachable. */
 export async function isFreighterInstalled(): Promise<boolean> {
-  const { isConnected: connected } = await isConnected();
-  return connected;
+  try {
+    const result = await isConnected();
+    return !result.error && result.isConnected === true;
+  } catch {
+    return false;
+  }
 }
 
 /** Prompts the Freighter extension for account access and returns the selected public key. */
