@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useRedirectIfAuthenticated } from '@/lib/use-redirect-if-authenticated';
 import { ApiError } from '@/lib/api';
 import { FormError } from '@/components/form-error';
 import { AuthLayout } from '@/components/auth-layout';
@@ -19,6 +20,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const redirecting = useRedirectIfAuthenticated();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +39,9 @@ export default function RegisterPage() {
       setSubmitting(false);
     }
   }
+
+  // Signed-in users are sent to their dashboard instead of seeing the form (#50).
+  if (redirecting) return null;
 
   return (
     <AuthLayout
