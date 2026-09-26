@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { ticketingContractUrl } from '@/lib/event-details';
@@ -53,7 +53,6 @@ function GateCode({ secret }: { secret: string }) {
 
 export default function MyTicketsPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -69,9 +68,7 @@ export default function MyTicketsPage() {
     recipient: TransferRecipient;
   } | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
   async function loadTickets() {
     try {

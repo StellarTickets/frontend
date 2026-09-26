@@ -2,8 +2,8 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useRequireAuth } from "@/lib/use-require-auth";
 import { apiFetch, ApiError } from "@/lib/api";
 import {
   INDUSTRIES,
@@ -31,7 +31,6 @@ export default function OrganizationPage({
 }) {
   const { id } = use(params);
   const { user, loading } = useAuth();
-  const router = useRouter();
 
   const [org, setOrg] = useState<Organization | null>(null);
   const [events, setEvents] = useState<EventRecord[]>([]);
@@ -48,9 +47,7 @@ export default function OrganizationPage({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) router.push("/login");
-  }, [loading, user, router]);
+  useRequireAuth();
 
   useEffect(() => {
     if (!user) return;

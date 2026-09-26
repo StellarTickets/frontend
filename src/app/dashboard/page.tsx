@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { INDUSTRIES, INDUSTRY_LABELS, type Organization } from '@/lib/types';
 import { FormError } from '@/components/form-error';
@@ -12,7 +12,6 @@ import { Button } from '@/components/button';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
 
@@ -53,9 +52,7 @@ export default function DashboardPage() {
   const SLUG_VALIDATION_MESSAGE =
     'Use lowercase letters, numbers, and single hyphens between words (e.g. my-organization).';
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
   useEffect(() => {
     if (stellarAccountTouched.current) return;
