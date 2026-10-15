@@ -3,13 +3,13 @@ import type { EventStatus, TicketStatus } from '@/lib/types';
 type Status = TicketStatus | EventStatus;
 
 export const STATUS_STYLES: Record<Status, string> = {
-  VALID: 'text-emerald-400 border-emerald-900/50 bg-emerald-950/30',
-  USED: 'text-amber-400 border-amber-900/50 bg-amber-950/30',
-  REVOKED: 'text-red-400 border-red-900/50 bg-red-950/30',
-  RESALE: 'text-sky-400 border-sky-900/50 bg-sky-950/30',
-  DRAFT: 'text-amber-400 border-amber-900/50 bg-amber-950/30',
-  PUBLISHED: 'text-emerald-400 border-emerald-900/50 bg-emerald-950/30',
-  CANCELLED: 'text-red-400 border-red-900/50 bg-red-950/30',
+  VALID: 'text-success border-success/30 bg-success/10',
+  USED: 'text-warning border-warning/30 bg-warning/10',
+  REVOKED: 'text-danger border-danger/30 bg-danger/10',
+  RESALE: 'text-info border-info/30 bg-info/10',
+  DRAFT: 'text-warning border-warning/30 bg-warning/10',
+  PUBLISHED: 'text-success border-success/30 bg-success/10',
+  CANCELLED: 'text-danger border-danger/30 bg-danger/10',
 };
 
 export const STATUS_LABELS: Record<Status, string> = {
