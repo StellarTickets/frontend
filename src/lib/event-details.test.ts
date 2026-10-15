@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPublishSummary,
+  eventTimesPayload,
   formatEventDate,
   formatResaleCap,
   formatRoyalty,
@@ -72,5 +73,27 @@ describe('ticketingContractUrl', () => {
     expect(ticketingContractUrl(undefined, 'testnet')).toBeNull();
     expect(ticketingContractUrl('', 'testnet')).toBeNull();
     expect(ticketingContractUrl('CABC', 'futurenet')).toBeNull();
+  });
+});
+
+describe('eventTimesPayload (#286)', () => {
+  it('sends endsAt as ISO when it is set and after the start', () => {
+    expect(eventTimesPayload('2030-01-01T18:00', '2030-01-01T23:00')).toEqual({
+      startsAt: new Date('2030-01-01T18:00').toISOString(),
+      endsAt: new Date('2030-01-01T23:00').toISOString(),
+    });
+  });
+
+  it('omits endsAt when it is left empty', () => {
+    const payload = eventTimesPayload('2030-01-01T18:00', '');
+    expect(payload).toEqual({ startsAt: new Date('2030-01-01T18:00').toISOString() });
+    expect(payload).not.toHaveProperty('endsAt');
+  });
+
+  it('rejects an end at or before the start', () => {
+    expect(eventTimesPayload('2030-01-01T18:00', '2030-01-01T18:00')).toEqual({
+      error: 'Ends at must be after Starts at',
+    });
+    expect(eventTimesPayload('2030-01-01T18:00', '2030-01-01T17:00')).toHaveProperty('error');
   });
 });
