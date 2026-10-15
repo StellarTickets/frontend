@@ -85,7 +85,7 @@ export function WalletConnectButton() {
       >
         {connecting ? 'Connecting…' : 'Connect Freighter wallet'}
       </button>
-      {error && <p className="text-sm text-red-300">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
