@@ -18,7 +18,7 @@ describe('buttonClassName', () => {
 
   it('maps variants and sizes', () => {
     expect(buttonClassName({ variant: 'secondary' })).toContain('border-border');
-    expect(buttonClassName({ variant: 'danger' })).toContain('text-red-300');
+    expect(buttonClassName({ variant: 'danger' })).toContain('text-danger');
     expect(buttonClassName({ size: 'sm' })).toContain('px-3 py-2 text-sm');
     expect(buttonClassName({ size: 'lg' })).toContain('rounded-xl px-4 py-3');
   });
