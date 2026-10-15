@@ -149,7 +149,7 @@ export default function DashboardPage() {
           <span id="slug-help" className="text-xs text-muted">
             {slug ? `stellartickets.netlify.app/${slug}` : 'This will form your organization’s URL.'}
           </span>
-          {slugError && <span className="text-xs text-red-500">{slugError}</span>}
+          {slugError && <span className="text-xs text-danger">{slugError}</span>}
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Industry
