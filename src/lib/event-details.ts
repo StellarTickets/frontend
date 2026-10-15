@@ -80,3 +80,21 @@ export function ticketingContractUrl(
   if (!contractId || !explorerNetwork) return null;
   return `https://stellar.expert/explorer/${explorerNetwork}/contract/${encodeURIComponent(contractId)}`;
 }
+
+/**
+ * Event start/end fields for the create-event request (#100, #286).
+ * `endsAt` is optional: it's sent only when set, and must be after `startsAt`.
+ * Inputs are `datetime-local` values.
+ */
+export function eventTimesPayload(
+  startsAt: string,
+  endsAt: string,
+): { startsAt: string; endsAt?: string } | { error: string } {
+  if (endsAt && new Date(endsAt) <= new Date(startsAt)) {
+    return { error: 'Ends at must be after Starts at' };
+  }
+  return {
+    startsAt: new Date(startsAt).toISOString(),
+    ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
+  };
+}

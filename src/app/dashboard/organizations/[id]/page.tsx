@@ -11,7 +11,7 @@ import {
   type EventRecord,
   type Organization,
 } from "@/lib/types";
-import { formatEventDate } from "@/lib/event-details";
+import { eventTimesPayload, formatEventDate } from "@/lib/event-details";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/button";
 import { StatusBadge } from "@/components/status-badge";
@@ -67,8 +67,9 @@ export default function OrganizationPage({
     e.preventDefault();
     setError(null);
 
-    if (endsAt && new Date(endsAt) <= new Date(startsAt)) {
-      setError("Ends at must be after Starts at");
+    const times = eventTimesPayload(startsAt, endsAt);
+    if ("error" in times) {
+      setError(times.error);
       return;
     }
 
@@ -103,8 +104,7 @@ export default function OrganizationPage({
           name,
           category,
           venue,
-          startsAt: new Date(startsAt).toISOString(),
-          ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
+          ...times,
           maxResaleMultiplierBps: Math.round(resaleCap * 100),
           royaltyBps: Math.round(royalty * 100),
         },
@@ -206,9 +206,10 @@ export default function OrganizationPage({
             onChange={(e) => setStartsAt(e.target.value)}
           />
         </FormField>
-        <FormField label="Ends at">
+        <FormField label="Ends at (optional)">
           <Input
             type="datetime-local"
+            min={startsAt || undefined}
             value={endsAt}
             onChange={(e) => setEndsAt(e.target.value)}
           />
