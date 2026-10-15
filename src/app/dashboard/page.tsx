@@ -9,6 +9,7 @@ import { INDUSTRIES, INDUSTRY_LABELS, type Organization } from '@/lib/types';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
 import { Button } from '@/components/button';
+import { FieldHint, FormField, Input, Select } from '@/components/form-field';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -124,18 +125,15 @@ export default function DashboardPage() {
       <h2 className="mt-12 font-heading text-xl font-bold">Create an organization</h2>
       <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-4">
         <FormError message={error} />
-        <label className="flex flex-col gap-1 text-sm">
-          Organization name
-          <input
+        <FormField label="Organization name">
+          <Input
             required
             value={name}
             onChange={handleNameChange}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Slug
-          <input
+        </FormField>
+        <FormField label="Slug">
+          <Input
             required
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             placeholder="my-organization"
@@ -144,30 +142,26 @@ export default function DashboardPage() {
             onInvalid={(e) => e.currentTarget.setCustomValidity(SLUG_VALIDATION_MESSAGE)}
             onInput={(e) => e.currentTarget.setCustomValidity('')}
             aria-describedby="slug-help"
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-          <span id="slug-help" className="text-xs text-muted">
+          <FieldHint id="slug-help">
             {slug ? `stellartickets.netlify.app/${slug}` : 'This will form your organization’s URL.'}
-          </span>
+          </FieldHint>
           {slugError && <span className="text-xs text-danger">{slugError}</span>}
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Industry
-          <select
+        </FormField>
+        <FormField label="Industry">
+          <Select
             value={industry}
             onChange={(e) => setIndustry(e.target.value as (typeof INDUSTRIES)[number])}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           >
             {INDUSTRIES.map((i) => (
               <option key={i} value={i}>
                 {INDUSTRY_LABELS[i]}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Stellar account (G…)
-          <input
+          </Select>
+        </FormField>
+        <FormField label="Stellar account (G…)">
+          <Input
             required
             pattern="G[A-Z0-9]{55}"
             value={stellarAccount}
@@ -175,13 +169,13 @@ export default function DashboardPage() {
               stellarAccountTouched.current = true;
               setStellarAccount(e.target.value);
             }}
-            className="rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs"
+            className="font-mono text-xs"
           />
-          <span className="text-xs text-muted">
+          <FieldHint>
             The Stellar account that will sign on-chain writes for this organization — connect
             your wallet above to prefill your own address.
-          </span>
-        </label>
+          </FieldHint>
+        </FormField>
         <Button
           type="submit"
           loading={submitting}

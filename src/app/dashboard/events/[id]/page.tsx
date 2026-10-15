@@ -13,6 +13,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { EventDetails } from '@/components/event-details';
 import { buildPublishSummary } from '@/lib/event-details';
+import { FieldHint, FormField, Input, Select } from '@/components/form-field';
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -232,38 +233,35 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       )}
 
       <form onSubmit={handleAddTicketType} className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Name
-          <input
+        <FormField label="Name">
+          <Input
             required
             placeholder="GA"
             value={ttName}
             onChange={(e) => setTtName(e.target.value)}
-            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+            className="w-28"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Price
-          <input
+        </FormField>
+        <FormField label="Price">
+          <Input
             required
             inputMode="numeric"
             placeholder="1000"
             value={ttPrice}
             onChange={(e) => setTtPrice(e.target.value)}
-            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+            className="w-28"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Quantity
-          <input
+        </FormField>
+        <FormField label="Quantity">
+          <Input
             required
             inputMode="numeric"
             placeholder="100"
             value={ttQuantity}
             onChange={(e) => setTtQuantity(e.target.value)}
-            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+            className="w-28"
           />
-        </label>
+        </FormField>
         <Button
           type="submit"
           loading={savingTicketType}
@@ -277,41 +275,35 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         <>
           <h2 className="mt-10 font-heading text-xl font-bold">Issue a ticket</h2>
           <form onSubmit={handleIssue} className="mt-4 flex flex-col gap-4">
-            <label className="flex flex-col gap-1 text-sm">
-              Recipient email
-              <input
+            <FormField label="Recipient email">
+              <Input
                 type="email"
                 required
                 value={issueEmail}
                 onChange={(e) => setIssueEmail(e.target.value)}
-                className="rounded-md border border-border bg-surface px-3 py-2"
               />
-              <span className="text-xs text-muted">
+              <FieldHint>
                 The recipient must already have a StellarTickets account with a connected wallet.
-              </span>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Ticket type
-              <select
+              </FieldHint>
+            </FormField>
+            <FormField label="Ticket type">
+              <Select
                 value={issueTicketTypeId}
                 onChange={(e) => setIssueTicketTypeId(e.target.value)}
-                className="rounded-md border border-border bg-surface px-3 py-2"
               >
                 {event.ticketTypes.map((tt) => (
                   <option key={tt.id} value={tt.id}>
                     {tt.name}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Seat (optional)
-              <input
+              </Select>
+            </FormField>
+            <FormField label="Seat (optional)">
+              <Input
                 value={issueSeat}
                 onChange={(e) => setIssueSeat(e.target.value)}
-                className="rounded-md border border-border bg-surface px-3 py-2"
               />
-            </label>
+            </FormField>
             <Button
               type="submit"
               loading={issuing}

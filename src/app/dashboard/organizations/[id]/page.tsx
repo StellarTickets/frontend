@@ -16,6 +16,7 @@ import { FormError } from "@/components/form-error";
 import { Button } from "@/components/button";
 import { StatusBadge } from "@/components/status-badge";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { FieldHint, FormField, Input, Select } from "@/components/form-field";
 
 // Resale cap is a multiplier of face value (100% = no markup allowed); royalty is a
 // straightforward percentage of the resale price. Bounds are UI guardrails, not on-chain limits.
@@ -169,62 +170,51 @@ export default function OrganizationPage({
       <h2 className="mt-12 font-heading text-xl font-bold">Create an event</h2>
       <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-4">
         <FormError message={error} />
-        <label className="flex flex-col gap-1 text-sm">
-          Event name
-          <input
+        <FormField label="Event name">
+          <Input
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Category
-          <select
+        </FormField>
+        <FormField label="Category">
+          <Select
             value={category}
             onChange={(e) =>
               setCategory(e.target.value as (typeof INDUSTRIES)[number])
             }
-            className="rounded-md border border-border bg-surface px-3 py-2"
           >
             {INDUSTRIES.map((i) => (
               <option key={i} value={i}>
                 {INDUSTRY_LABELS[i]}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Venue
-          <input
+          </Select>
+        </FormField>
+        <FormField label="Venue">
+          <Input
             required
             value={venue}
             onChange={(e) => setVenue(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Starts at
-          <input
+        </FormField>
+        <FormField label="Starts at">
+          <Input
             required
             type="datetime-local"
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Ends at
-          <input
+        </FormField>
+        <FormField label="Ends at">
+          <Input
             type="datetime-local"
             value={endsAt}
             onChange={(e) => setEndsAt(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Resale cap (% of face value)
-          <input
+        </FormField>
+        <FormField label="Resale cap (% of face value)">
+          <Input
             required
             type="number"
             inputMode="decimal"
@@ -233,17 +223,15 @@ export default function OrganizationPage({
             step="1"
             value={resaleCapPercent}
             onChange={(e) => setResaleCapPercent(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-          <span className="text-xs text-muted">
+          <FieldHint>
             The most a ticket can resell for, as a percentage of face value. 120
             means resales are capped at 1.2× face value; 100 means no markup is
             allowed.
-          </span>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Organizer royalty on resale (%)
-          <input
+          </FieldHint>
+        </FormField>
+        <FormField label="Organizer royalty on resale (%)">
+          <Input
             required
             type="number"
             inputMode="decimal"
@@ -252,13 +240,12 @@ export default function OrganizationPage({
             step="0.1"
             value={royaltyPercent}
             onChange={(e) => setRoyaltyPercent(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           />
-          <span className="text-xs text-muted">
+          <FieldHint>
             Percentage of each resale that&apos;s paid to you automatically
             on-chain. Set to 0 for no royalty.
-          </span>
-        </label>
+          </FieldHint>
+        </FormField>
         <Button type="submit" loading={submitting} className="self-start">
           {submitting ? "Creating…" : "Create event"}
         </Button>
