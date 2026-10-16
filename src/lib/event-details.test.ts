@@ -36,6 +36,16 @@ describe('formatEventDate', () => {
 });
 
 describe('buildPublishSummary', () => {
+  it('includes the organizer royalty alongside the resale cap (#278)', () => {
+    const summary = buildPublishSummary({ name: 'Fest', maxResaleMultiplierBps: 15_000, royaltyBps: 500 });
+    expect(summary).toContain('Resale cap: 1.5× face value');
+    expect(summary).toContain('Organizer royalty: 5%');
+  });
+
+  it('shows a 0% royalty when none is set', () => {
+    expect(buildPublishSummary({ name: 'Fest' })).toContain('Organizer royalty: 0%');
+  });
+
   it('lists the key event details and resale cap before publishing', () => {
     const summary = buildPublishSummary({
       name: 'Summer Fest',
