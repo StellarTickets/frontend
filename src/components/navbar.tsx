@@ -17,6 +17,7 @@ interface NavLink {
 const LINKS: NavLink[] = [
   { href: '/about', label: 'About' },
   { href: '/security', label: 'Security' },
+  { href: '/events', label: 'Events' },
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/dashboard', label: 'Dashboard', authOnly: true },
   { href: '/my-tickets', label: 'My tickets', authOnly: true },
