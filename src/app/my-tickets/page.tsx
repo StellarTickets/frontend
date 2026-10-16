@@ -8,6 +8,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { ticketingContractUrl } from '@/lib/event-details';
 import { INDUSTRY_LABELS, type Ticket } from '@/lib/types';
+import { transferNotice } from '@/lib/transfer-notice';
 import { formatEventDate, maxResalePrice } from '@/lib/event-details';
 import { FormError } from '@/components/form-error';
 import { CopyButton } from '@/components/copy-button';
@@ -18,6 +19,9 @@ import { TicketQr } from '@/components/ticket-qr';
 
 type ActiveAction = { ticketId: string; type: 'transfer' | 'resell' } | null;
 type TransferRecipient = { id: string; name?: string; email?: string };
+
+/** How long a transferred ticket fades out before the list refreshes (#266). */
+const TRANSFER_FADE_MS = 300;
 
 const POLL_INTERVAL_MS = 25_000;
 
@@ -57,6 +61,7 @@ export default function MyTicketsPage() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [leavingTicketId, setLeavingTicketId] = useState<string | null>(null);
   const [busyTicketId, setBusyTicketId] = useState<string | null>(null);
 
   const [activeAction, setActiveAction] = useState<ActiveAction>(null);
@@ -183,7 +188,11 @@ export default function MyTicketsPage() {
           body: { toUserId: recipient.id, signedXdr },
         }),
       );
-      doneMessage = `Ticket transferred to ${transferEmail}.`;
+      doneMessage = transferNotice(
+        tickets.find((t) => t.id === ticketId),
+        recipient,
+        transferEmail,
+      );
       setActiveAction(null);
       setPendingTransfer(null);
       setTransferEmail('');
@@ -192,7 +201,13 @@ export default function MyTicketsPage() {
     } finally {
       setBusyTicketId(null);
     }
-    if (doneMessage) await reloadAfterAction(doneMessage);
+    if (doneMessage) {
+      // Fade the transferred ticket out before the refreshed list drops it (#266).
+      setLeavingTicketId(ticketId);
+      await new Promise((resolve) => setTimeout(resolve, TRANSFER_FADE_MS));
+      await reloadAfterAction(doneMessage);
+      setLeavingTicketId(null);
+    }
   }
 
   async function handleListForResale(e: FormEvent, ticket: Ticket) {
@@ -275,7 +290,11 @@ export default function MyTicketsPage() {
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
+      {notice && (
+        <p role="status" aria-live="polite" className="mt-6 text-sm text-gradient font-medium">
+          {notice}
+        </p>
+      )}
 
       {loadingTickets ? (
         <p className="mt-8 text-muted">Loading…</p>
@@ -290,7 +309,12 @@ export default function MyTicketsPage() {
       ) : (
         <ul className="mt-8 flex flex-col gap-4">
           {tickets.map((ticket) => (
-            <li key={ticket.id} className="rounded-lg border border-border p-4">
+            <li
+              key={ticket.id}
+              className={`rounded-lg border border-border p-4 transition-opacity duration-300 ${
+                leavingTicketId === ticket.id ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{ticket.event?.name}</p>

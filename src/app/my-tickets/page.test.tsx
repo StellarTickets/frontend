@@ -109,6 +109,26 @@ describe('My tickets actions (#313)', () => {
     });
   });
 
+  it('fades the ticket out and names the recipient after a transfer (#266)', async () => {
+    await render([ticket({})]);
+    await click('Transfer');
+    await type('#transfer-email-t1', 'bob@example.com');
+    await click('Send');
+    await click('Confirm');
+
+    // The ticket fades before the list refreshes.
+    expect(container.querySelector('li')?.className).toContain('opacity-0');
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    });
+    const status = container.querySelector('[role="status"]');
+    expect(status?.textContent).toBe(
+      "Gig · Seat A1 transferred to Bob (bob@example.com). It's no longer in your tickets.",
+    );
+    expect(status?.getAttribute('aria-live')).toBe('polite');
+  });
+
   it('lists a ticket for resale at the entered price', async () => {
     await render([ticket({})]);
 
