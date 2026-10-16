@@ -8,6 +8,8 @@ import { signAndSubmit } from '@/lib/onchain';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
 import { Button } from '@/components/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { describeRevokeTarget } from '@/lib/revoke-confirm';
 import { QrScanner } from '@/components/qr-scanner';
 import { STATUS_LABELS, STATUS_STYLES } from '@/components/status-badge';
 
@@ -29,6 +31,7 @@ export default function VerifyPage() {
   const [checking, setChecking] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
 
   useRequireAuth();
 
@@ -80,7 +83,10 @@ export default function VerifyPage() {
     }
   }
 
+  // #246: revoking is permanent, so the button only opens a confirmation;
+  // the on-chain revoke runs from the dialog's confirm button.
   async function handleRevoke() {
+    setConfirmRevokeOpen(false);
     if (!result || !user?.stellarPublicKey) return;
     setError(null);
     setActionBusy(true);
@@ -180,7 +186,7 @@ export default function VerifyPage() {
             )}
             {result.status !== 'REVOKED' && (
               <Button
-                onClick={handleRevoke}
+                onClick={() => setConfirmRevokeOpen(true)}
                 loading={actionBusy}
                 variant="danger"
                 className="text-sm"
@@ -190,6 +196,25 @@ export default function VerifyPage() {
             )}
           </div>
         </div>
+      )}
+
+      {result && (
+        <ConfirmDialog
+          open={confirmRevokeOpen}
+          title="Revoke this ticket?"
+          confirmLabel="Revoke ticket"
+          loadingLabel="Revoking…"
+          loading={actionBusy}
+          onConfirm={handleRevoke}
+          onCancel={() => setConfirmRevokeOpen(false)}
+        >
+          <p className="font-medium text-foreground">{describeRevokeTarget(result)}</p>
+          <p className="mt-2">
+            Revocation is recorded on-chain and{' '}
+            <strong className="text-foreground">can&apos;t be undone</strong>: the ticket will
+            no longer be valid for entry, check-in or resale. Your wallet will ask you to sign.
+          </p>
+        </ConfirmDialog>
       )}
     </div>
   );
