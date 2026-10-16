@@ -6,6 +6,7 @@ export function buildPublishSummary(event: {
   endsAt?: string | null;
   venue?: string;
   maxResaleMultiplierBps?: number;
+  royaltyBps?: number;
   ticketTypes?: Array<{ name: string; quantityTotal?: number; price?: string }>;
 }): string {
   const dateSummary = [
@@ -27,6 +28,7 @@ export function buildPublishSummary(event: {
     `Venue: ${event.venue ?? 'Not set'}`,
     `Ticket types: ${ticketTypes}`,
     `Resale cap: ${formatResaleCap(event.maxResaleMultiplierBps ?? 10_000)}`,
+    `Organizer royalty: ${formatRoyalty(event.royaltyBps ?? 0)}`,
   ].join('\n');
 }
 

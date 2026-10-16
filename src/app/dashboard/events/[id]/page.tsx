@@ -9,6 +9,7 @@ import type { EventRecord, TicketType } from '@/lib/types';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
 import { Button } from '@/components/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { StatusBadge } from '@/components/status-badge';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { EventDetails } from '@/components/event-details';
@@ -186,30 +187,30 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
       {event.status === 'DRAFT' && (
         <>
-          {!showPublishReview ? (
-            <Button onClick={handlePublish} loading={publishing} className="mt-6">
-              {publishing ? 'Publishing…' : 'Publish event on-chain'}
-            </Button>
-          ) : (
-            <div className="mt-6 rounded-lg border border-border bg-surface p-4">
-              <h2 className="font-heading text-lg font-bold">Confirm event publication</h2>
-              <p className="mt-2 text-sm text-muted">
-                Publishing locks the event parameters on-chain and opens ticket sales. Review the
-                details below before the wallet prompt appears.
-              </p>
-              <pre className="mt-4 whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-sm text-foreground">
-                {buildPublishSummary(event)}
-              </pre>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button onClick={confirmPublish} loading={publishing}>
-                  {publishing ? 'Publishing…' : 'Confirm and publish'}
-                </Button>
-                <Button variant="secondary" onClick={() => setShowPublishReview(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
+          <Button onClick={handlePublish} loading={publishing} className="mt-6">
+            {publishing ? 'Publishing…' : 'Publish event on-chain'}
+          </Button>
+          {/* #278: publishing is irreversible, so it needs an explicit confirm. */}
+          <ConfirmDialog
+            open={showPublishReview}
+            title="Publish this event on-chain?"
+            confirmLabel="Confirm and publish"
+            loadingLabel="Publishing…"
+            loading={publishing}
+            onConfirm={confirmPublish}
+            onCancel={() => setShowPublishReview(false)}
+          >
+            <p>
+              Publishing writes this event to the ticketing contract and opens ticket sales.{' '}
+              <strong className="text-foreground">
+                The resale cap and organizer royalty below can&apos;t be changed after publishing.
+              </strong>{' '}
+              Review the details before your wallet asks you to sign.
+            </p>
+            <pre className="mt-4 whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-sm text-foreground">
+              {buildPublishSummary(event)}
+            </pre>
+          </ConfirmDialog>
         </>
       )}
 
