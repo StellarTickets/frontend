@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useRedirectIfAuthenticated } from '@/lib/use-redirect-if-authenticated';
 import { ApiError } from '@/lib/api';
 import { FormError } from '@/components/form-error';
 import { AuthLayout } from '@/components/auth-layout';
 import { TextField } from '@/components/text-field';
+import { Button } from '@/components/button';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -18,6 +20,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const redirecting = useRedirectIfAuthenticated();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +39,9 @@ export default function RegisterPage() {
       setSubmitting(false);
     }
   }
+
+  // Signed-in users are sent to their dashboard instead of seeing the form (#50).
+  if (redirecting) return null;
 
   return (
     <AuthLayout
@@ -78,13 +84,14 @@ export default function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button
+        <Button
           type="submit"
-          disabled={submitting}
-          className="mt-2 rounded-xl bg-gradient-sunset px-4 py-3 font-medium text-white shadow-lg shadow-violet/20 transition-opacity hover:opacity-90 disabled:opacity-50"
+          loading={submitting}
+          size="lg"
+          className="mt-2"
         >
           {submitting ? 'Creating account…' : 'Create account'}
-        </button>
+        </Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{' '}

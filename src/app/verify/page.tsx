@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
+import { Button } from '@/components/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { describeRevokeTarget } from '@/lib/revoke-confirm';
+import { QrScanner } from '@/components/qr-scanner';
+import { STATUS_LABELS, STATUS_STYLES } from '@/components/status-badge';
 
 interface VerifyResult {
   ticketId: string;
@@ -18,39 +23,41 @@ interface VerifyResult {
   onChainOwner: string;
 }
 
-const STATUS_STYLES: Record<VerifyResult['status'], string> = {
-  VALID: 'text-emerald-400 border-emerald-900/50 bg-emerald-950/30',
-  USED: 'text-amber-400 border-amber-900/50 bg-amber-950/30',
-  REVOKED: 'text-red-400 border-red-900/50 bg-red-950/30',
-  RESALE: 'text-sky-400 border-sky-900/50 bg-sky-950/30',
-};
-
 export default function VerifyPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [code, setCode] = useState('');
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [confirmRevokeOpen, setConfirmRevokeOpen] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
-  async function handleLookup(e: React.FormEvent) {
-    e.preventDefault();
+  async function lookup(ticketCode: string) {
     setError(null);
     setResult(null);
     setChecking(true);
     try {
-      const res = await apiFetch<VerifyResult>(`/tickets/verify/${encodeURIComponent(code)}`);
+      const res = await apiFetch<VerifyResult>(`/tickets/verify/${encodeURIComponent(ticketCode)}`);
       setResult(res);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not verify this ticket.');
     } finally {
       setChecking(false);
     }
+  }
+
+  function handleLookup(e: React.FormEvent) {
+    e.preventDefault();
+    void lookup(code);
+  }
+
+  function handleScanned(scanned: string) {
+    setScanning(false);
+    setCode(scanned);
+    void lookup(scanned);
   }
 
   async function handleCheckIn() {
@@ -76,7 +83,10 @@ export default function VerifyPage() {
     }
   }
 
+  // #246: revoking is permanent, so the button only opens a confirmation;
+  // the on-chain revoke runs from the dialog's confirm button.
   async function handleRevoke() {
+    setConfirmRevokeOpen(false);
     if (!result || !user?.stellarPublicKey) return;
     setError(null);
     setActionBusy(true);
@@ -120,14 +130,28 @@ export default function VerifyPage() {
           onChange={(e) => setCode(e.target.value)}
           className="flex-1 rounded-md border border-border bg-surface px-3 py-2 font-mono text-sm"
         />
-        <button
+        <Button
           type="submit"
-          disabled={checking}
-          className="rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+          loading={checking}
         >
           {checking ? 'Checking…' : 'Verify'}
-        </button>
+        </Button>
       </form>
+
+      <div className="mt-3">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setScanning((on) => !on)}
+        >
+          {scanning ? 'Stop scanning' : 'Scan with camera'}
+        </Button>
+      </div>
+      {scanning && (
+        <div className="mt-3">
+          <QrScanner onDetected={handleScanned} />
+        </div>
+      )}
 
       {error && (
         <div className="mt-6">
@@ -137,7 +161,7 @@ export default function VerifyPage() {
 
       {result && (
         <div className={`mt-6 rounded-lg border p-6 ${STATUS_STYLES[result.status]}`}>
-          <p className="text-lg font-semibold">{result.status}</p>
+          <p className="text-lg font-semibold">{STATUS_LABELS[result.status]}</p>
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm text-foreground">
             <dt className="text-muted">Event</dt>
             <dd>{result.eventName}</dd>
@@ -152,25 +176,45 @@ export default function VerifyPage() {
           </dl>
           <div className="mt-4 flex gap-3">
             {result.status === 'VALID' && (
-              <button
+              <Button
                 onClick={handleCheckIn}
-                disabled={actionBusy}
-                className="rounded-md bg-gradient-sunset px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                loading={actionBusy}
+                className="text-sm"
               >
                 {actionBusy ? 'Working…' : 'Check in'}
-              </button>
+              </Button>
             )}
             {result.status !== 'REVOKED' && (
-              <button
-                onClick={handleRevoke}
-                disabled={actionBusy}
-                className="rounded-md border border-red-900/50 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-950/30 disabled:opacity-50"
+              <Button
+                onClick={() => setConfirmRevokeOpen(true)}
+                loading={actionBusy}
+                variant="danger"
+                className="text-sm"
               >
                 {actionBusy ? 'Working…' : 'Revoke'}
-              </button>
+              </Button>
             )}
           </div>
         </div>
+      )}
+
+      {result && (
+        <ConfirmDialog
+          open={confirmRevokeOpen}
+          title="Revoke this ticket?"
+          confirmLabel="Revoke ticket"
+          loadingLabel="Revoking…"
+          loading={actionBusy}
+          onConfirm={handleRevoke}
+          onCancel={() => setConfirmRevokeOpen(false)}
+        >
+          <p className="font-medium text-foreground">{describeRevokeTarget(result)}</p>
+          <p className="mt-2">
+            Revocation is recorded on-chain and{' '}
+            <strong className="text-foreground">can&apos;t be undone</strong>: the ticket will
+            no longer be valid for entry, check-in or resale. Your wallet will ask you to sign.
+          </p>
+        </ConfirmDialog>
       )}
     </div>
   );

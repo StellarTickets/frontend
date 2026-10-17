@@ -12,7 +12,7 @@ export function TicketMockup() {
             <h3 className="mt-1 font-heading text-xl font-bold">Nova Skyline Tour</h3>
             <p className="mt-1 text-sm text-muted">Amphitheater · Sept 14, 8:00 PM</p>
           </div>
-          <span className="flex items-center gap-1 rounded-full bg-emerald-950/60 px-2.5 py-1 text-xs font-medium text-emerald-400">
+          <span className="flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success">
             <CheckCircle2 className="h-3.5 w-3.5" /> Valid
           </span>
         </div>

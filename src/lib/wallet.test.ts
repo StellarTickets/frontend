@@ -26,6 +26,19 @@ describe('isFreighterInstalled', () => {
     vi.mocked(isConnected).mockResolvedValue({ isConnected: false });
     expect(await isFreighterInstalled()).toBe(false);
   });
+
+  it('returns false when Freighter reports an error', async () => {
+    vi.mocked(isConnected).mockResolvedValue({
+      isConnected: false,
+      error: { message: 'not installed', code: -1 },
+    });
+    expect(await isFreighterInstalled()).toBe(false);
+  });
+
+  it('returns false instead of throwing when the extension call fails', async () => {
+    vi.mocked(isConnected).mockRejectedValue(new Error('no extension'));
+    expect(await isFreighterInstalled()).toBe(false);
+  });
 });
 
 describe('connectWallet', () => {

@@ -2,29 +2,63 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { INDUSTRIES, INDUSTRY_LABELS, type Organization } from '@/lib/types';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
+import { Button } from '@/components/button';
+import { FieldHint, FormField, Input, Select } from '@/components/form-field';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const slugEditedRef = useRef(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
   const [industry, setIndustry] = useState<(typeof INDUSTRIES)[number]>('CONCERTS');
-  const stellarAccountRef = useRef<HTMLInputElement>(null);
+  const [stellarAccount, setStellarAccount] = useState(user?.stellarPublicKey ?? '');
+  // True once the user edits the field, so wallet updates stop overriding their input.
+  const stellarAccountTouched = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  function slugify(value: string) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/[\s-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setName(value);
+    if (!slugEditedRef.current) {
+      setSlug(slugify(value));
+    }
+  }
+
+  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    slugEditedRef.current = true;
+    setSlug(e.target.value);
+    setSlugError(null);
+  }
+
+  const SLUG_VALIDATION_MESSAGE =
+    'Use lowercase letters, numbers, and single hyphens between words (e.g. my-organization).';
+
+  useRequireAuth();
+
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+    if (stellarAccountTouched.current) return;
+    setStellarAccount(user?.stellarPublicKey ?? '');
+  }, [user?.stellarPublicKey]);
 
   useEffect(() => {
     if (!user) return;
@@ -44,11 +78,12 @@ export default function DashboardPage() {
     try {
       const org = await apiFetch<Organization>('/organizations', {
         method: 'POST',
-        body: { name, slug, industry, stellarAccount: stellarAccountRef.current?.value ?? '' },
+        body: { name, slug, industry, stellarAccount },
       });
       setOrgs((prev) => [org, ...prev]);
       setName('');
       setSlug('');
+      slugEditedRef.current = false;
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not create the organization.');
     } finally {
@@ -90,62 +125,64 @@ export default function DashboardPage() {
       <h2 className="mt-12 font-heading text-xl font-bold">Create an organization</h2>
       <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-4">
         <FormError message={error} />
-        <label className="flex flex-col gap-1 text-sm">
-          Organization name
-          <input
+        <FormField label="Organization name">
+          <Input
             required
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
+            onChange={handleNameChange}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Slug
-          <input
+        </FormField>
+        <FormField label="Slug">
+          <Input
             required
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             placeholder="my-organization"
             value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            className="rounded-md border border-border bg-surface px-3 py-2"
+            onChange={handleSlugChange}
+            onInvalid={(e) => e.currentTarget.setCustomValidity(SLUG_VALIDATION_MESSAGE)}
+            onInput={(e) => e.currentTarget.setCustomValidity('')}
+            aria-describedby="slug-help"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Industry
-          <select
+          <FieldHint id="slug-help">
+            {slug ? `stellartickets.netlify.app/${slug}` : 'This will form your organization’s URL.'}
+          </FieldHint>
+          {slugError && <span className="text-xs text-danger">{slugError}</span>}
+        </FormField>
+        <FormField label="Industry">
+          <Select
             value={industry}
             onChange={(e) => setIndustry(e.target.value as (typeof INDUSTRIES)[number])}
-            className="rounded-md border border-border bg-surface px-3 py-2"
           >
             {INDUSTRIES.map((i) => (
               <option key={i} value={i}>
                 {INDUSTRY_LABELS[i]}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Stellar account (G…)
-          <input
-            key={user.stellarPublicKey ?? 'no-wallet'}
-            ref={stellarAccountRef}
+          </Select>
+        </FormField>
+        <FormField label="Stellar account (G…)">
+          <Input
             required
             pattern="G[A-Z0-9]{55}"
-            defaultValue={user.stellarPublicKey ?? ''}
-            className="rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs"
+            value={stellarAccount}
+            onChange={(e) => {
+              stellarAccountTouched.current = true;
+              setStellarAccount(e.target.value);
+            }}
+            className="font-mono text-xs"
           />
-          <span className="text-xs text-muted">
+          <FieldHint>
             The Stellar account that will sign on-chain writes for this organization — connect
             your wallet above to prefill your own address.
-          </span>
-        </label>
-        <button
+          </FieldHint>
+        </FormField>
+        <Button
           type="submit"
-          disabled={submitting}
-          className="self-start rounded-md bg-gradient-sunset px-4 py-2 font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+          loading={submitting}
+          className="self-start"
         >
           {submitting ? 'Creating…' : 'Create organization'}
-        </button>
+        </Button>
       </form>
     </div>
   );

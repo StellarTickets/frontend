@@ -108,3 +108,11 @@ export interface ResaleListing {
   };
   seller: { name: string };
 }
+
+/** Page-number paginated list, as returned by backend list endpoints (e.g. `GET /events`). */
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+}

@@ -1,36 +1,102 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, ApiError } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
-import type { Ticket } from '@/lib/types';
+import { ticketingContractUrl } from '@/lib/event-details';
+import { INDUSTRY_LABELS, type Ticket } from '@/lib/types';
+import { transferNotice } from '@/lib/transfer-notice';
+import { formatEventDate, maxResalePrice } from '@/lib/event-details';
 import { FormError } from '@/components/form-error';
+import { CopyButton } from '@/components/copy-button';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
+import { Button } from '@/components/button';
+import { StatusBadge } from '@/components/status-badge';
+import { TicketQr } from '@/components/ticket-qr';
 
 type ActiveAction = { ticketId: string; type: 'transfer' | 'resell' } | null;
+type TransferRecipient = { id: string; name?: string; email?: string };
+
+/** How long a transferred ticket fades out before the list refreshes (#266). */
+const TRANSFER_FADE_MS = 300;
+
+const POLL_INTERVAL_MS = 25_000;
+
+const CONTRACT_URL = ticketingContractUrl(
+  process.env.NEXT_PUBLIC_TICKETING_CONTRACT_ID,
+  process.env.NEXT_PUBLIC_STELLAR_NETWORK,
+);
+
+/** Gate code is a bearer credential for entry, so it stays masked until revealed. */
+function GateCode({ secret }: { secret: string }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <p className="mt-3 flex items-center gap-1 text-xs text-muted">
+      Gate code:{' '}
+      <span className="font-mono text-foreground select-all">
+        {revealed ? secret : '•'.repeat(12)}
+      </span>
+      <button
+        type="button"
+        onClick={() => setRevealed((v) => !v)}
+        aria-label={revealed ? 'Hide gate code' : 'Show gate code'}
+        aria-pressed={revealed}
+        title={revealed ? 'Hide gate code' : 'Show gate code'}
+        className="inline-flex items-center rounded p-1 text-muted hover:bg-surface hover:text-foreground"
+      >
+        {revealed ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
+      </button>
+      <CopyButton value={secret} label="Copy gate code" />
+    </p>
+  );
+}
 
 export default function MyTicketsPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [leavingTicketId, setLeavingTicketId] = useState<string | null>(null);
   const [busyTicketId, setBusyTicketId] = useState<string | null>(null);
 
   const [activeAction, setActiveAction] = useState<ActiveAction>(null);
   const [transferEmail, setTransferEmail] = useState('');
   const [resalePrice, setResalePrice] = useState('');
+  const [pendingTransfer, setPendingTransfer] = useState<{
+    ticketId: string;
+    recipient: TransferRecipient;
+  } | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [loading, user, router]);
+  useRequireAuth();
 
   async function loadTickets() {
-    const res = await apiFetch<Ticket[]>('/tickets/mine');
-    setTickets(res);
+    try {
+      const res = await apiFetch<Ticket[]>('/tickets/mine');
+      setTickets(res);
+      setLoadFailed(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load your tickets.');
+      setLoadFailed(true);
+    }
+  }
+
+  /**
+   * Refreshes the list after an on-chain action has already been confirmed.
+   * Runs outside the action's try/catch so a failed reload never reports the
+   * (already completed) action as failed and invites a retry (#62).
+   */
+  async function reloadAfterAction(doneMessage: string) {
+    try {
+      setTickets(await apiFetch<Ticket[]>('/tickets/mine'));
+      setNotice(doneMessage);
+    } catch {
+      setNotice(`${doneMessage} The list could not refresh; reload the page to see the latest state.`);
+    }
   }
 
   useEffect(() => {
@@ -42,6 +108,39 @@ export default function MyTicketsPage() {
     void run();
   }, [user]);
 
+  // Refresh while the tab is visible so check-ins and sales show up without a reload.
+  useEffect(() => {
+    if (!user) return;
+    async function refresh() {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        setTickets(await apiFetch<Ticket[]>('/tickets/mine'));
+      } catch {
+        // Keep showing the last known tickets; the next poll will retry.
+      }
+    }
+    const timer = setInterval(() => void refresh(), POLL_INTERVAL_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [user]);
+  async function retryLoad() {
+    setError(null);
+    setLoadingTickets(true);
+    await loadTickets();
+    setLoadingTickets(false);
+  }
+
+  function toggleAction(ticketId: string, type: 'transfer' | 'resell') {
+    setActiveAction((prev) =>
+      prev?.ticketId === ticketId && prev.type === type ? null : { ticketId, type },
+    );
+    setTransferEmail('');
+    setResalePrice('');
+  }
+
   function requireWallet(): string | null {
     if (!user?.stellarPublicKey) {
       setError('Connect your wallet before managing tickets.');
@@ -50,16 +149,35 @@ export default function MyTicketsPage() {
     return user.stellarPublicKey;
   }
 
-  async function handleTransfer(ticketId: string) {
+  async function handleLookupRecipient(e: FormEvent, ticket: Ticket) {
+    e.preventDefault();
+    if (transferEmail.trim().toLowerCase() === user?.email.toLowerCase()) {
+      setError('You already own this ticket.');
+      return;
+    }
+    setError(null);
+    setNotice(null);
+    setBusyTicketId(ticket.id);
+    try {
+      const recipient = await apiFetch<TransferRecipient>(
+        `/users/lookup?email=${encodeURIComponent(transferEmail)}`,
+      );
+      setPendingTransfer({ ticketId: ticket.id, recipient });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not find that user.');
+    } finally {
+      setBusyTicketId(null);
+    }
+  }
+
+  async function handleTransfer(ticketId: string, recipient: TransferRecipient) {
     const wallet = requireWallet();
     if (!wallet) return;
     setError(null);
     setNotice(null);
     setBusyTicketId(ticketId);
+    let doneMessage: string | null = null;
     try {
-      const recipient = await apiFetch<{ id: string }>(
-        `/users/lookup?email=${encodeURIComponent(transferEmail)}`,
-      );
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${ticketId}/transfer`,
         { method: 'POST', body: { toUserId: recipient.id } },
@@ -70,23 +188,43 @@ export default function MyTicketsPage() {
           body: { toUserId: recipient.id, signedXdr },
         }),
       );
-      setNotice(`Ticket transferred to ${transferEmail}.`);
+      doneMessage = transferNotice(
+        tickets.find((t) => t.id === ticketId),
+        recipient,
+        transferEmail,
+      );
       setActiveAction(null);
+      setPendingTransfer(null);
       setTransferEmail('');
-      await loadTickets();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not transfer this ticket.');
     } finally {
       setBusyTicketId(null);
     }
+    if (doneMessage) {
+      // Fade the transferred ticket out before the refreshed list drops it (#266).
+      setLeavingTicketId(ticketId);
+      await new Promise((resolve) => setTimeout(resolve, TRANSFER_FADE_MS));
+      await reloadAfterAction(doneMessage);
+      setLeavingTicketId(null);
+    }
   }
 
-  async function handleListForResale(ticketId: string) {
+  async function handleListForResale(e: FormEvent, ticket: Ticket) {
+    e.preventDefault();
+    const ticketId = ticket.id;
+    if (!/^[1-9]\d*$/.test(resalePrice)) return;
     const wallet = requireWallet();
     if (!wallet) return;
+    const cap = maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps);
+    if (cap !== null && (!/^\d+$/.test(resalePrice) || BigInt(resalePrice) > BigInt(cap))) {
+      setError(`Enter a whole-number price of at most ${cap}.`);
+      return;
+    }
     setError(null);
     setNotice(null);
     setBusyTicketId(ticketId);
+    let doneMessage: string | null = null;
     try {
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${ticketId}/list-resale`,
@@ -98,15 +236,15 @@ export default function MyTicketsPage() {
           body: { price: resalePrice, signedXdr },
         }),
       );
-      setNotice('Ticket listed on the marketplace.');
+      doneMessage = 'Ticket listed on the marketplace.';
       setActiveAction(null);
       setResalePrice('');
-      await loadTickets();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not list this ticket.');
     } finally {
       setBusyTicketId(null);
     }
+    if (doneMessage) await reloadAfterAction(doneMessage);
   }
 
   async function handleCancelResale(ticketId: string) {
@@ -115,6 +253,7 @@ export default function MyTicketsPage() {
     setError(null);
     setNotice(null);
     setBusyTicketId(ticketId);
+    let doneMessage: string | null = null;
     try {
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${ticketId}/cancel-resale`,
@@ -126,16 +265,18 @@ export default function MyTicketsPage() {
           body: { signedXdr },
         }),
       );
-      setNotice('Listing cancelled.');
-      await loadTickets();
+      doneMessage = 'Listing cancelled.';
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not cancel this listing.');
     } finally {
       setBusyTicketId(null);
     }
+    if (doneMessage) await reloadAfterAction(doneMessage);
   }
 
   if (loading || !user) return null;
+
+  const isValidResalePrice = /^[1-9]\d*$/.test(resalePrice);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -149,55 +290,82 @@ export default function MyTicketsPage() {
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
+      {notice && (
+        <p role="status" aria-live="polite" className="mt-6 text-sm text-gradient font-medium">
+          {notice}
+        </p>
+      )}
 
       {loadingTickets ? (
         <p className="mt-8 text-muted">Loading…</p>
+      ) : loadFailed && tickets.length === 0 ? (
+        <div className="mt-8">
+          <Button onClick={retryLoad} variant="secondary" size="sm">
+            Retry
+          </Button>
+        </div>
       ) : tickets.length === 0 ? (
         <p className="mt-8 text-muted">You don’t have any tickets yet.</p>
       ) : (
         <ul className="mt-8 flex flex-col gap-4">
           {tickets.map((ticket) => (
-            <li key={ticket.id} className="rounded-lg border border-border p-4">
+            <li
+              key={ticket.id}
+              className={`rounded-lg border border-border p-4 transition-opacity duration-300 ${
+                leavingTicketId === ticket.id ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{ticket.event?.name}</p>
                   <p className="text-sm text-muted">
                     {ticket.ticketType?.name} · Seat {ticket.seat}
                   </p>
+                  {ticket.event && (
+                    <p className="text-sm text-muted">
+                      {formatEventDate(ticket.event.startsAt)} · {ticket.event.venue} ·{' '}
+                      {INDUSTRY_LABELS[ticket.event.category]}
+                    </p>
+                  )}
                 </div>
-                <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">
-                  {ticket.status}
-                </span>
+                <StatusBadge status={ticket.status} />
               </div>
 
-              <p className="mt-3 text-xs text-muted">
-                Gate code:{' '}
-                <span className="font-mono text-foreground select-all">{ticket.qrSecret}</span>
-              </p>
+              {CONTRACT_URL && (
+                <a
+                  href={CONTRACT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 text-xs text-gradient font-medium hover:underline"
+                >
+                  View on-chain (ticket #{ticket.chainTicketId})
+                  <ExternalLink size={12} aria-hidden="true" />
+                </a>
+              )}
+
+              {ticket.status === 'VALID' ? (
+                <div className="mt-3">
+                  <TicketQr value={ticket.qrSecret} />
+                  <GateCode secret={ticket.qrSecret} />
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-muted">
+                  {ticket.status === 'RESALE'
+                    ? 'The gate code is hidden while this ticket is listed for resale.'
+                    : 'The gate code is no longer valid for this ticket.'}
+                </p>
+              )}
 
               {ticket.status === 'VALID' && (
                 <div className="mt-3 flex gap-3">
                   <button
-                    onClick={() =>
-                      setActiveAction((prev) =>
-                        prev?.ticketId === ticket.id && prev.type === 'transfer'
-                          ? null
-                          : { ticketId: ticket.id, type: 'transfer' },
-                      )
-                    }
+                    onClick={() => toggleAction(ticket.id, 'transfer')}
                     className="text-sm text-gradient font-medium hover:underline"
                   >
                     Transfer
                   </button>
                   <button
-                    onClick={() =>
-                      setActiveAction((prev) =>
-                        prev?.ticketId === ticket.id && prev.type === 'resell'
-                          ? null
-                          : { ticketId: ticket.id, type: 'resell' },
-                      )
-                    }
+                    onClick={() => toggleAction(ticket.id, 'resell')}
                     className="text-sm text-gradient font-medium hover:underline"
                   >
                     List for resale
@@ -215,40 +383,86 @@ export default function MyTicketsPage() {
               )}
 
               {activeAction?.ticketId === ticket.id && activeAction.type === 'transfer' && (
-                <div className="mt-3 flex gap-2">
+                <form
+                  onSubmit={(e) => handleLookupRecipient(e, ticket)}
+                  className="mt-3 flex gap-2"
+                >
+                  <label htmlFor={`transfer-email-${ticket.id}`} className="sr-only">
+                    Recipient email
+                  </label>
                   <input
+                    id={`transfer-email-${ticket.id}`}
                     type="email"
+                    required
                     placeholder="recipient@example.com"
                     value={transferEmail}
-                    onChange={(e) => setTransferEmail(e.target.value)}
+                    onChange={(e) => {
+                      setTransferEmail(e.target.value);
+                      setPendingTransfer(null);
+                    }}
                     className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm"
                   />
-                  <button
-                    onClick={() => handleTransfer(ticket.id)}
-                    disabled={busyTicketId === ticket.id}
-                    className="rounded-md bg-gradient-sunset px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                  <Button
+                    type="submit"
+                    loading={busyTicketId === ticket.id && pendingTransfer === null}
+                    size="sm"
                   >
-                    {busyTicketId === ticket.id ? 'Sending…' : 'Send'}
-                  </button>
+                    Send
+                  </Button>
+                </form>
+              )}
+              {pendingTransfer?.ticketId === ticket.id && (
+                <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+                  <p>
+                    Transfer <span className="font-medium">{ticket.event?.name}</span> to{' '}
+                    {pendingTransfer.recipient.name
+                      ? `${pendingTransfer.recipient.name} (${transferEmail})`
+                      : transferEmail}
+                    ?
+                  </p>
+                  <Button
+                    onClick={() => handleTransfer(ticket.id, pendingTransfer.recipient)}
+                    loading={busyTicketId === ticket.id}
+                    size="sm"
+                  >
+                    {busyTicketId === ticket.id ? 'Sending…' : 'Confirm'}
+                  </Button>
                 </div>
               )}
               {activeAction?.ticketId === ticket.id && activeAction.type === 'resell' && (
-                <div className="mt-3 flex gap-2">
+                <form
+                  onSubmit={(e) => handleListForResale(e, ticket)}
+                  className="mt-3 flex flex-wrap gap-2"
+                >
+                  <label htmlFor={`resale-price-${ticket.id}`} className="sr-only">
+                    Asking price
+                  </label>
                   <input
+                    id={`resale-price-${ticket.id}`}
                     inputMode="numeric"
+                    required
                     placeholder="Asking price"
                     value={resalePrice}
                     onChange={(e) => setResalePrice(e.target.value)}
+                    aria-invalid={resalePrice !== '' && !isValidResalePrice}
                     className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm"
                   />
-                  <button
-                    onClick={() => handleListForResale(ticket.id)}
-                    disabled={busyTicketId === ticket.id}
-                    className="rounded-md bg-gradient-sunset px-3 py-2 text-sm font-medium text-white shadow-lg shadow-violet/20 hover:opacity-90 disabled:opacity-50"
+                  <Button
+                    type="submit"
+                    loading={busyTicketId === ticket.id}
+                    disabled={!isValidResalePrice}
+                    size="sm"
                   >
                     {busyTicketId === ticket.id ? 'Listing…' : 'List'}
-                  </button>
-                </div>
+                  </Button>
+                  {maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps) !==
+                    null && (
+                    <p className="w-full text-xs text-muted">
+                      Max resale price:{' '}
+                      {maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps)}
+                    </p>
+                  )}
+                </form>
               )}
             </li>
           ))}

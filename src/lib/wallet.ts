@@ -4,15 +4,26 @@ import {
   getAddress,
   signTransaction as freighterSignTransaction,
 } from '@stellar/freighter-api';
+import { resolveEnv } from './env';
 
-const NETWORK_PASSPHRASE =
-  process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE ?? 'Test SDF Network ; September 2015';
+const NETWORK_PASSPHRASE = resolveEnv(
+  'NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE',
+  process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
+  'Test SDF Network ; September 2015',
+);
 
 export class WalletError extends Error {}
 
+export const FREIGHTER_INSTALL_URL = 'https://www.freighter.app/';
+
+/** Resolves `false` (never throws) when the Freighter extension is missing or unreachable. */
 export async function isFreighterInstalled(): Promise<boolean> {
-  const { isConnected: connected } = await isConnected();
-  return connected;
+  try {
+    const result = await isConnected();
+    return !result.error && result.isConnected === true;
+  } catch {
+    return false;
+  }
 }
 
 /** Prompts the Freighter extension for account access and returns the selected public key. */
