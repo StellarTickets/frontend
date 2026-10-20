@@ -12,6 +12,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
 }));
 vi.mock('@/lib/wallet', () => ({
   signTransaction: (...args: unknown[]) => signTransaction(...args),
+  WalletError: class WalletError extends Error {},
 }));
 vi.mock('@/lib/auth-context', () => ({
   useAuth: () => ({
@@ -24,6 +25,7 @@ vi.mock('@/components/wallet-connect-button', () => ({ WalletConnectButton: () =
 vi.mock('@/components/ticket-qr', () => ({ TicketQr: () => null }));
 
 import MyTicketsPage from './page';
+import { WalletError } from '@/lib/wallet';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -153,5 +155,36 @@ describe('My tickets actions (#313)', () => {
       method: 'POST',
       body: { signedXdr: 'SIGNED' },
     });
+  });
+});
+
+describe('My tickets wallet rejections (#232)', () => {
+  it('shows the wallet message when a transfer signature is rejected', async () => {
+    signTransaction.mockRejectedValue(new WalletError('You declined the transfer in Freighter'));
+    await render([ticket({})]);
+    await click('Transfer');
+    await type('#transfer-email-t1', 'bob@example.com');
+    await click('Send');
+    await click('Confirm');
+
+    expect(container.textContent).toContain('You declined the transfer in Freighter');
+  });
+
+  it('shows the wallet message when a resale listing signature is rejected', async () => {
+    signTransaction.mockRejectedValue(new WalletError('You declined the listing in Freighter'));
+    await render([ticket({})]);
+    await click('List for resale');
+    await type('#resale-price-t1', '120');
+    await click('List');
+
+    expect(container.textContent).toContain('You declined the listing in Freighter');
+  });
+
+  it('shows the wallet message when a cancel signature is rejected', async () => {
+    signTransaction.mockRejectedValue(new WalletError('You declined the cancel in Freighter'));
+    await render([ticket({ status: 'RESALE' })]);
+    await click('Cancel listing');
+
+    expect(container.textContent).toContain('You declined the cancel in Freighter');
   });
 });

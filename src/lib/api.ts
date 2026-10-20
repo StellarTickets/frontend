@@ -1,4 +1,5 @@
 import { resolveEnv } from './env';
+import { WalletError } from './wallet';
 
 const API_URL = resolveEnv('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3000');
 const TOKEN_KEY = 'stellartickets.token';
@@ -16,7 +17,7 @@ export class ApiError extends Error {
 /**
  * The request never got a usable response: it timed out or the network
  * failed. Extends ApiError (status 0) so existing `instanceof ApiError`
- * handling, e.g. actionErrorMessage, surfaces its friendly message.
+ * handling, e.g. getErrorMessage, surfaces its friendly message.
  */
 export class NetworkError extends ApiError {
   constructor(message: string) {
@@ -31,6 +32,18 @@ export const DEFAULT_TIMEOUT_MS = 15_000;
 /** True when the backend rejected our credentials (expired / invalid JWT). */
 export function isUnauthorized(err: unknown): boolean {
   return err instanceof ApiError && err.status === 401;
+}
+
+/**
+ * User-facing message for a failed API or wallet action. ApiError and
+ * WalletError messages are actionable (rejected Freighter popup, wrong network,
+ * validation); anything else, or an empty message, falls back to `fallback`.
+ */
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if ((err instanceof ApiError || err instanceof WalletError) && err.message) {
+    return err.message;
+  }
+  return fallback;
 }
 
 export function getToken(): string | null {
