@@ -76,7 +76,9 @@ function isAbortError(err: unknown): boolean {
 /** Backend BigInt fields (prices, chain ids) arrive as JSON strings/numbers depending on Nest's serializer; kept as strings end-to-end. */
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, auth = true, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {};
+  // Body-less requests (e.g. GET) skip Content-Type so browsers don't need a CORS preflight.
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   if (auth) {
     const token = getToken();
