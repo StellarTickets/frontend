@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch } from '@/lib/api';
-import { actionErrorMessage } from '@/lib/action-error';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import type { ResaleListing } from '@/lib/types';
 import { FormError } from '@/components/form-error';
@@ -51,7 +50,7 @@ export default function MarketplacePage() {
       setNotice('Ticket purchased — find it under My tickets.');
       setListings((prev) => prev.filter((l) => l.ticketId !== ticketId));
     } catch (err) {
-      setError(actionErrorMessage(err, 'Could not complete the purchase.'));
+      setError(getErrorMessage(err, 'Could not complete the purchase.'));
     } finally {
       setBuyingTicketId(null);
     }

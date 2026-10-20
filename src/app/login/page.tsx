@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRedirectIfAuthenticated } from '@/lib/use-redirect-if-authenticated';
-import { ApiError } from '@/lib/api';
+import { getErrorMessage } from '@/lib/api';
 import { FormError } from '@/components/form-error';
 import { AuthLayout } from '@/components/auth-layout';
 import { TextField } from '@/components/text-field';
@@ -29,11 +29,7 @@ export default function LoginPage() {
       await login(email, password);
       router.push('/dashboard');
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Could not reach the server. Is the backend running?',
-      );
+      setError(getErrorMessage(err, 'Could not reach the server. Is the backend running?'));
     } finally {
       setSubmitting(false);
     }

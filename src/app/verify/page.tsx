@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, ApiError } from '@/lib/api';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
@@ -43,7 +43,7 @@ export default function VerifyPage() {
       const res = await apiFetch<VerifyResult>(`/tickets/verify/${encodeURIComponent(ticketCode)}`);
       setResult(res);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not verify this ticket.');
+      setError(getErrorMessage(err, 'Could not verify this ticket.'));
     } finally {
       setChecking(false);
     }
@@ -77,7 +77,7 @@ export default function VerifyPage() {
       );
       setResult({ ...result, status: 'USED' });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not check in this ticket.');
+      setError(getErrorMessage(err, 'Could not check in this ticket.'));
     } finally {
       setActionBusy(false);
     }
@@ -103,7 +103,7 @@ export default function VerifyPage() {
       );
       setResult({ ...result, status: 'REVOKED' });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not revoke this ticket.');
+      setError(getErrorMessage(err, 'Could not revoke this ticket.'));
     } finally {
       setActionBusy(false);
     }

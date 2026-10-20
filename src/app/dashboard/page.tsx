@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, ApiError } from '@/lib/api';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { INDUSTRIES, INDUSTRY_LABELS, type Organization } from '@/lib/types';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
@@ -85,7 +85,7 @@ export default function DashboardPage() {
       setSlug('');
       slugEditedRef.current = false;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create the organization.');
+      setError(getErrorMessage(err, 'Could not create the organization.'));
     } finally {
       setSubmitting(false);
     }
