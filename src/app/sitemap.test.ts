@@ -7,6 +7,6 @@ describe('sitemap metadata', () => {
     const second = sitemap();
 
     expect(first).toEqual(second);
-    expect(first.every((entry) => entry.lastModified === '2026-09-20')).toBe(true);
+    expect(first.every((entry) => entry.lastModified === '2026-08-20')).toBe(true);
   });
 });

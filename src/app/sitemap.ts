@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
 // Keep this stable between requests; update it when public page content changes.
-const LAST_MODIFIED = '2026-09-20';
+const LAST_MODIFIED = '2026-08-20';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = ['', '/marketplace', '/login', '/register'];
