@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
@@ -42,6 +42,7 @@ export function Navbar() {
   const pathname = usePathname();
   const scrolled = useScrolled();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   // Close the mobile menu on navigation. Adjusted during render (React's
   // documented pattern for resetting state on a prop change) rather than in
@@ -57,6 +58,20 @@ export function Navbar() {
     return () => {
       document.body.style.overflow = '';
     };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
   }, [menuOpen]);
 
   const visibleLinks = LINKS.filter((link) => !link.authOnly || user);
@@ -116,9 +131,11 @@ export function Navbar() {
         </div>
 
         <button
+          ref={menuButtonRef}
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
           className="flex h-9 w-9 items-center justify-center rounded-full text-foreground md:hidden"
         >
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -126,6 +143,9 @@ export function Navbar() {
       </nav>
 
       <div
+        id="mobile-menu"
+        aria-hidden={!menuOpen}
+        inert={!menuOpen}
         className={`mx-auto max-w-5xl overflow-hidden transition-all duration-300 md:hidden ${
           menuOpen ? 'mt-3 max-h-[28rem] opacity-100' : 'max-h-0 opacity-0'
         }`}
