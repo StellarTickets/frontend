@@ -3,7 +3,11 @@ import { CheckCircle2 } from 'lucide-react';
 /** A static, illustrative ticket card for the marketing hero — not real ticket data. */
 export function TicketMockup() {
   return (
-    <div className="relative mx-auto w-full max-w-sm rotate-2 rounded-2xl border border-border-bright bg-surface shadow-2xl shadow-violet/10 transition-transform hover:rotate-0">
+    <div
+      aria-hidden="true"
+      role="presentation"
+      className="relative mx-auto w-full max-w-sm motion-safe:rotate-2 rounded-2xl border border-border-bright bg-surface shadow-2xl shadow-violet/10 transition-transform motion-safe:hover:rotate-0"
+    >
       <div className="h-2 rounded-t-2xl bg-gradient-sunset" />
       <div className="p-6">
         <div className="flex items-start justify-between">
