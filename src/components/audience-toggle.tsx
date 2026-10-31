@@ -39,7 +39,7 @@ export function AudienceToggle() {
     <div>
       <div className="relative inline-flex rounded-full border border-border bg-surface p-1">
         <div
-          className={`absolute top-1 bottom-1 left-1 w-[168px] rounded-full bg-gradient-sunset transition-transform duration-300 ease-out ${
+          className={`absolute top-1 bottom-1 left-1 w-[168px] rounded-full bg-gradient-action transition-transform duration-300 ease-out ${
             active === 'organizers' ? 'translate-x-[168px]' : 'translate-x-0'
           }`}
         />
