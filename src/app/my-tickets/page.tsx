@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, ApiError } from '@/lib/api';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { ticketingContractUrl } from '@/lib/event-details';
 import { INDUSTRY_LABELS, type Ticket } from '@/lib/types';
@@ -80,7 +80,7 @@ export default function MyTicketsPage() {
       setTickets(res);
       setLoadFailed(false);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not load your tickets.');
+      setError(getErrorMessage(err, 'Could not load your tickets.'));
       setLoadFailed(true);
     }
   }
@@ -164,7 +164,7 @@ export default function MyTicketsPage() {
       );
       setPendingTransfer({ ticketId: ticket.id, recipient });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not find that user.');
+      setError(getErrorMessage(err, 'Could not find that user.'));
     } finally {
       setBusyTicketId(null);
     }
@@ -197,7 +197,7 @@ export default function MyTicketsPage() {
       setPendingTransfer(null);
       setTransferEmail('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not transfer this ticket.');
+      setError(getErrorMessage(err, 'Could not transfer this ticket.'));
     } finally {
       setBusyTicketId(null);
     }
@@ -240,7 +240,7 @@ export default function MyTicketsPage() {
       setActiveAction(null);
       setResalePrice('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not list this ticket.');
+      setError(getErrorMessage(err, 'Could not list this ticket.'));
     } finally {
       setBusyTicketId(null);
     }
@@ -267,7 +267,7 @@ export default function MyTicketsPage() {
       );
       doneMessage = 'Listing cancelled.';
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not cancel this listing.');
+      setError(getErrorMessage(err, 'Could not cancel this listing.'));
     } finally {
       setBusyTicketId(null);
     }

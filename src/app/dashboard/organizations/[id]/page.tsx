@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useRequireAuth } from "@/lib/use-require-auth";
-import { apiFetch, ApiError } from "@/lib/api";
+import { apiFetch, getErrorMessage } from "@/lib/api";
 import {
   INDUSTRIES,
   INDUSTRY_LABELS,
@@ -117,9 +117,7 @@ export default function OrganizationPage({
       setResaleCapPercent("120");
       setRoyaltyPercent("5");
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not create the event.",
-      );
+      setError(getErrorMessage(err, "Could not create the event."));
     } finally {
       setSubmitting(false);
     }

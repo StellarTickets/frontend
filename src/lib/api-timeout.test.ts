@@ -20,7 +20,7 @@ describe('apiFetch timeout & cancellation (#54)', () => {
 
   it('fails with a friendly NetworkError when the backend stalls past the timeout', async () => {
     global.fetch = hangingFetch();
-    const err = await apiFetch('/events', { auth: false, timeoutMs: 20 }).catch((e) => e);
+    const err = await apiFetch('/events', { auth: false, timeoutMs: 1 }).catch((e) => e);
     expect(err).toBeInstanceOf(NetworkError);
     expect(err).toBeInstanceOf(ApiError);
     expect(err.status).toBe(0);

@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { apiFetch } from '@/lib/api';
-import { actionErrorMessage } from '@/lib/action-error';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { EVENTS_PAGE_SIZE, formatEventDate } from '@/lib/events';
 import type { EventRecord, Paginated } from '@/lib/types';
 import { FormError } from '@/components/form-error';
@@ -22,7 +21,7 @@ export default function EventsPage() {
         if (!cancelled) setData(res);
       })
       .catch((err) => {
-        if (!cancelled) setError(actionErrorMessage(err, 'Could not load events.'));
+        if (!cancelled) setError(getErrorMessage(err, 'Could not load events.'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
