@@ -32,11 +32,15 @@ export function ParticleNetwork() {
     function resize() {
       const rect = canvas!.getBoundingClientRect();
       const widthChanged = Math.abs(rect.width - width) > 1;
+      const previousHeight = height;
       width = rect.width;
       height = rect.height;
       canvas!.width = width * devicePixelRatio;
       canvas!.height = height * devicePixelRatio;
       ctx!.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      if (!widthChanged && previousHeight > 0) {
+        for (const particle of particles) particle.y *= height / previousHeight;
+      }
       return widthChanged;
     }
 
@@ -58,8 +62,14 @@ export function ParticleNetwork() {
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+        if (p.x < 0 || p.x > width) {
+          p.vx *= -1;
+          p.x = Math.max(0, Math.min(width, p.x));
+        }
+        if (p.y < 0 || p.y > height) {
+          p.vy *= -1;
+          p.y = Math.max(0, Math.min(height, p.y));
+        }
       }
 
       for (let i = 0; i < particles.length; i++) {
