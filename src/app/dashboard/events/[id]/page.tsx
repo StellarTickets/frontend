@@ -3,16 +3,18 @@
 import { use, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, ApiError } from '@/lib/api';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import type { EventRecord, TicketType } from '@/lib/types';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
 import { Button } from '@/components/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { StatusBadge } from '@/components/status-badge';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { EventDetails } from '@/components/event-details';
 import { buildPublishSummary } from '@/lib/event-details';
+import { FieldHint, FormField, Input, Select } from '@/components/form-field';
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -70,7 +72,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       setTtPrice('');
       setTtQuantity('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not add the ticket type.');
+      setError(getErrorMessage(err, 'Could not add the ticket type.'));
     } finally {
       setSavingTicketType(false);
     }
@@ -104,7 +106,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       setNotice('Event published on-chain.');
       await loadEvent();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not publish this event.');
+      setError(getErrorMessage(err, 'Could not publish this event.'));
     } finally {
       setPublishing(false);
     }
@@ -143,7 +145,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       setIssueSeat('');
       await loadEvent();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not issue this ticket.');
+      setError(getErrorMessage(err, 'Could not issue this ticket.'));
     } finally {
       setIssuing(false);
     }
@@ -185,30 +187,30 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
       {event.status === 'DRAFT' && (
         <>
-          {!showPublishReview ? (
-            <Button onClick={handlePublish} loading={publishing} className="mt-6">
-              {publishing ? 'Publishing…' : 'Publish event on-chain'}
-            </Button>
-          ) : (
-            <div className="mt-6 rounded-lg border border-border bg-surface p-4">
-              <h2 className="font-heading text-lg font-bold">Confirm event publication</h2>
-              <p className="mt-2 text-sm text-muted">
-                Publishing locks the event parameters on-chain and opens ticket sales. Review the
-                details below before the wallet prompt appears.
-              </p>
-              <pre className="mt-4 whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-sm text-foreground">
-                {buildPublishSummary(event)}
-              </pre>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button onClick={confirmPublish} loading={publishing}>
-                  {publishing ? 'Publishing…' : 'Confirm and publish'}
-                </Button>
-                <Button variant="secondary" onClick={() => setShowPublishReview(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
+          <Button onClick={handlePublish} loading={publishing} className="mt-6">
+            {publishing ? 'Publishing…' : 'Publish event on-chain'}
+          </Button>
+          {/* #278: publishing is irreversible, so it needs an explicit confirm. */}
+          <ConfirmDialog
+            open={showPublishReview}
+            title="Publish this event on-chain?"
+            confirmLabel="Confirm and publish"
+            loadingLabel="Publishing…"
+            loading={publishing}
+            onConfirm={confirmPublish}
+            onCancel={() => setShowPublishReview(false)}
+          >
+            <p>
+              Publishing writes this event to the ticketing contract and opens ticket sales.{' '}
+              <strong className="text-foreground">
+                The resale cap and organizer royalty below can&apos;t be changed after publishing.
+              </strong>{' '}
+              Review the details before your wallet asks you to sign.
+            </p>
+            <pre className="mt-4 whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-sm text-foreground">
+              {buildPublishSummary(event)}
+            </pre>
+          </ConfirmDialog>
         </>
       )}
 
@@ -232,38 +234,35 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       )}
 
       <form onSubmit={handleAddTicketType} className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          Name
-          <input
+        <FormField label="Name">
+          <Input
             required
             placeholder="GA"
             value={ttName}
             onChange={(e) => setTtName(e.target.value)}
-            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+            className="w-28"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Price
-          <input
+        </FormField>
+        <FormField label="Price">
+          <Input
             required
             inputMode="numeric"
             placeholder="1000"
             value={ttPrice}
             onChange={(e) => setTtPrice(e.target.value)}
-            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+            className="w-28"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          Quantity
-          <input
+        </FormField>
+        <FormField label="Quantity">
+          <Input
             required
             inputMode="numeric"
             placeholder="100"
             value={ttQuantity}
             onChange={(e) => setTtQuantity(e.target.value)}
-            className="w-28 rounded-md border border-border bg-surface px-3 py-2"
+            className="w-28"
           />
-        </label>
+        </FormField>
         <Button
           type="submit"
           loading={savingTicketType}
@@ -277,41 +276,35 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         <>
           <h2 className="mt-10 font-heading text-xl font-bold">Issue a ticket</h2>
           <form onSubmit={handleIssue} className="mt-4 flex flex-col gap-4">
-            <label className="flex flex-col gap-1 text-sm">
-              Recipient email
-              <input
+            <FormField label="Recipient email">
+              <Input
                 type="email"
                 required
                 value={issueEmail}
                 onChange={(e) => setIssueEmail(e.target.value)}
-                className="rounded-md border border-border bg-surface px-3 py-2"
               />
-              <span className="text-xs text-muted">
+              <FieldHint>
                 The recipient must already have a StellarTickets account with a connected wallet.
-              </span>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Ticket type
-              <select
+              </FieldHint>
+            </FormField>
+            <FormField label="Ticket type">
+              <Select
                 value={issueTicketTypeId}
                 onChange={(e) => setIssueTicketTypeId(e.target.value)}
-                className="rounded-md border border-border bg-surface px-3 py-2"
               >
                 {event.ticketTypes.map((tt) => (
                   <option key={tt.id} value={tt.id}>
                     {tt.name}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Seat (optional)
-              <input
+              </Select>
+            </FormField>
+            <FormField label="Seat (optional)">
+              <Input
                 value={issueSeat}
                 onChange={(e) => setIssueSeat(e.target.value)}
-                className="rounded-md border border-border bg-surface px-3 py-2"
               />
-            </label>
+            </FormField>
             <Button
               type="submit"
               loading={issuing}

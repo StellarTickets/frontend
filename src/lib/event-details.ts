@@ -6,6 +6,7 @@ export function buildPublishSummary(event: {
   endsAt?: string | null;
   venue?: string;
   maxResaleMultiplierBps?: number;
+  royaltyBps?: number;
   ticketTypes?: Array<{ name: string; quantityTotal?: number; price?: string }>;
 }): string {
   const dateSummary = [
@@ -27,6 +28,7 @@ export function buildPublishSummary(event: {
     `Venue: ${event.venue ?? 'Not set'}`,
     `Ticket types: ${ticketTypes}`,
     `Resale cap: ${formatResaleCap(event.maxResaleMultiplierBps ?? 10_000)}`,
+    `Organizer royalty: ${formatRoyalty(event.royaltyBps ?? 0)}`,
   ].join('\n');
 }
 
@@ -79,4 +81,22 @@ export function ticketingContractUrl(
   const explorerNetwork = EXPLORER_NETWORK[(network ?? 'testnet').toLowerCase()];
   if (!contractId || !explorerNetwork) return null;
   return `https://stellar.expert/explorer/${explorerNetwork}/contract/${encodeURIComponent(contractId)}`;
+}
+
+/**
+ * Event start/end fields for the create-event request (#100, #286).
+ * `endsAt` is optional: it's sent only when set, and must be after `startsAt`.
+ * Inputs are `datetime-local` values.
+ */
+export function eventTimesPayload(
+  startsAt: string,
+  endsAt: string,
+): { startsAt: string; endsAt?: string } | { error: string } {
+  if (endsAt && new Date(endsAt) <= new Date(startsAt)) {
+    return { error: 'Ends at must be after Starts at' };
+  }
+  return {
+    startsAt: new Date(startsAt).toISOString(),
+    ...(endsAt ? { endsAt: new Date(endsAt).toISOString() } : {}),
+  };
 }

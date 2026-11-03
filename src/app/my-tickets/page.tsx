@@ -4,11 +4,11 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, ApiError } from '@/lib/api';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { ticketingContractUrl } from '@/lib/event-details';
-import type { Ticket } from '@/lib/types';
 import { INDUSTRY_LABELS, type Ticket } from '@/lib/types';
+import { transferNotice } from '@/lib/transfer-notice';
 import { formatEventDate, maxResalePrice } from '@/lib/event-details';
 import { FormError } from '@/components/form-error';
 import { CopyButton } from '@/components/copy-button';
@@ -19,6 +19,9 @@ import { TicketQr } from '@/components/ticket-qr';
 
 type ActiveAction = { ticketId: string; type: 'transfer' | 'resell' } | null;
 type TransferRecipient = { id: string; name?: string; email?: string };
+
+/** How long a transferred ticket fades out before the list refreshes (#266). */
+const TRANSFER_FADE_MS = 300;
 
 const POLL_INTERVAL_MS = 25_000;
 
@@ -58,6 +61,7 @@ export default function MyTicketsPage() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [leavingTicketId, setLeavingTicketId] = useState<string | null>(null);
   const [busyTicketId, setBusyTicketId] = useState<string | null>(null);
 
   const [activeAction, setActiveAction] = useState<ActiveAction>(null);
@@ -76,7 +80,7 @@ export default function MyTicketsPage() {
       setTickets(res);
       setLoadFailed(false);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not load your tickets.');
+      setError(getErrorMessage(err, 'Could not load your tickets.'));
       setLoadFailed(true);
     }
   }
@@ -145,7 +149,8 @@ export default function MyTicketsPage() {
     return user.stellarPublicKey;
   }
 
-  async function handleLookupRecipient(ticket: Ticket) {
+  async function handleLookupRecipient(e: FormEvent, ticket: Ticket) {
+    e.preventDefault();
     if (transferEmail.trim().toLowerCase() === user?.email.toLowerCase()) {
       setError('You already own this ticket.');
       return;
@@ -159,15 +164,13 @@ export default function MyTicketsPage() {
       );
       setPendingTransfer({ ticketId: ticket.id, recipient });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not find that user.');
+      setError(getErrorMessage(err, 'Could not find that user.'));
     } finally {
       setBusyTicketId(null);
     }
   }
 
   async function handleTransfer(ticketId: string, recipient: TransferRecipient) {
-  async function handleTransfer(e: FormEvent, ticketId: string) {
-    e.preventDefault();
     const wallet = requireWallet();
     if (!wallet) return;
     setError(null);
@@ -185,24 +188,32 @@ export default function MyTicketsPage() {
           body: { toUserId: recipient.id, signedXdr },
         }),
       );
-      doneMessage = `Ticket transferred to ${transferEmail}.`;
+      doneMessage = transferNotice(
+        tickets.find((t) => t.id === ticketId),
+        recipient,
+        transferEmail,
+      );
       setActiveAction(null);
       setPendingTransfer(null);
       setTransferEmail('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not transfer this ticket.');
+      setError(getErrorMessage(err, 'Could not transfer this ticket.'));
     } finally {
       setBusyTicketId(null);
     }
-    if (doneMessage) await reloadAfterAction(doneMessage);
+    if (doneMessage) {
+      // Fade the transferred ticket out before the refreshed list drops it (#266).
+      setLeavingTicketId(ticketId);
+      await new Promise((resolve) => setTimeout(resolve, TRANSFER_FADE_MS));
+      await reloadAfterAction(doneMessage);
+      setLeavingTicketId(null);
+    }
   }
 
-  async function handleListForResale(ticket: Ticket) {
-    const ticketId = ticket.id;
-  async function handleListForResale(ticketId: string) {
-    if (!/^[1-9]\d*$/.test(resalePrice)) return;
-  async function handleListForResale(e: FormEvent, ticketId: string) {
+  async function handleListForResale(e: FormEvent, ticket: Ticket) {
     e.preventDefault();
+    const ticketId = ticket.id;
+    if (!/^[1-9]\d*$/.test(resalePrice)) return;
     const wallet = requireWallet();
     if (!wallet) return;
     const cap = maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps);
@@ -229,7 +240,7 @@ export default function MyTicketsPage() {
       setActiveAction(null);
       setResalePrice('');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not list this ticket.');
+      setError(getErrorMessage(err, 'Could not list this ticket.'));
     } finally {
       setBusyTicketId(null);
     }
@@ -256,7 +267,7 @@ export default function MyTicketsPage() {
       );
       doneMessage = 'Listing cancelled.';
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not cancel this listing.');
+      setError(getErrorMessage(err, 'Could not cancel this listing.'));
     } finally {
       setBusyTicketId(null);
     }
@@ -279,7 +290,11 @@ export default function MyTicketsPage() {
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
+      {notice && (
+        <p role="status" aria-live="polite" className="mt-6 text-sm text-gradient font-medium">
+          {notice}
+        </p>
+      )}
 
       {loadingTickets ? (
         <p className="mt-8 text-muted">Loading…</p>
@@ -294,7 +309,12 @@ export default function MyTicketsPage() {
       ) : (
         <ul className="mt-8 flex flex-col gap-4">
           {tickets.map((ticket) => (
-            <li key={ticket.id} className="rounded-lg border border-border p-4">
+            <li
+              key={ticket.id}
+              className={`rounded-lg border border-border p-4 transition-opacity duration-300 ${
+                leavingTicketId === ticket.id ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{ticket.event?.name}</p>
@@ -311,8 +331,6 @@ export default function MyTicketsPage() {
                 <StatusBadge status={ticket.status} />
               </div>
 
-              <GateCode secret={ticket.qrSecret} />
-
               {CONTRACT_URL && (
                 <a
                   href={CONTRACT_URL}
@@ -323,14 +341,12 @@ export default function MyTicketsPage() {
                   View on-chain (ticket #{ticket.chainTicketId})
                   <ExternalLink size={12} aria-hidden="true" />
                 </a>
+              )}
+
               {ticket.status === 'VALID' ? (
                 <div className="mt-3">
                   <TicketQr value={ticket.qrSecret} />
-                  <p className="mt-2 flex items-center gap-1 text-xs text-muted">
-                    Gate code:{' '}
-                    <span className="font-mono text-foreground select-all">{ticket.qrSecret}</span>
-                    <CopyButton value={ticket.qrSecret} label="Copy gate code" />
-                  </p>
+                  <GateCode secret={ticket.qrSecret} />
                 </div>
               ) : (
                 <p className="mt-3 text-xs text-muted">
@@ -368,7 +384,7 @@ export default function MyTicketsPage() {
 
               {activeAction?.ticketId === ticket.id && activeAction.type === 'transfer' && (
                 <form
-                  onSubmit={(e) => handleTransfer(e, ticket.id)}
+                  onSubmit={(e) => handleLookupRecipient(e, ticket)}
                   className="mt-3 flex gap-2"
                 >
                   <label htmlFor={`transfer-email-${ticket.id}`} className="sr-only">
@@ -387,13 +403,13 @@ export default function MyTicketsPage() {
                     className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm"
                   />
                   <Button
-                    onClick={() => handleLookupRecipient(ticket)}
+                    type="submit"
                     loading={busyTicketId === ticket.id && pendingTransfer === null}
                     size="sm"
                   >
                     Send
                   </Button>
-                </div>
+                </form>
               )}
               {pendingTransfer?.ticketId === ticket.id && (
                 <div className="mt-3 flex items-center justify-between gap-2 text-sm">
@@ -410,16 +426,13 @@ export default function MyTicketsPage() {
                     size="sm"
                   >
                     {busyTicketId === ticket.id ? 'Sending…' : 'Confirm'}
-                  <Button type="submit" loading={busyTicketId === ticket.id} size="sm">
-                    {busyTicketId === ticket.id ? 'Sending…' : 'Send'}
                   </Button>
-                </form>
+                </div>
               )}
               {activeAction?.ticketId === ticket.id && activeAction.type === 'resell' && (
-                <div className="mt-3 flex flex-wrap gap-2">
                 <form
-                  onSubmit={(e) => handleListForResale(e, ticket.id)}
-                  className="mt-3 flex gap-2"
+                  onSubmit={(e) => handleListForResale(e, ticket)}
+                  className="mt-3 flex flex-wrap gap-2"
                 >
                   <label htmlFor={`resale-price-${ticket.id}`} className="sr-only">
                     Asking price
@@ -435,12 +448,11 @@ export default function MyTicketsPage() {
                     className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm"
                   />
                   <Button
-                    onClick={() => handleListForResale(ticket)}
+                    type="submit"
                     loading={busyTicketId === ticket.id}
                     disabled={!isValidResalePrice}
                     size="sm"
                   >
-                  <Button type="submit" loading={busyTicketId === ticket.id} size="sm">
                     {busyTicketId === ticket.id ? 'Listing…' : 'List'}
                   </Button>
                   {maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps) !==
@@ -450,7 +462,6 @@ export default function MyTicketsPage() {
                       {maxResalePrice(ticket.ticketType?.price, ticket.event?.maxResaleMultiplierBps)}
                     </p>
                   )}
-                </div>
                 </form>
               )}
             </li>

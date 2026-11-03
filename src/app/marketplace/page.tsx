@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch } from '@/lib/api';
-import { actionErrorMessage } from '@/lib/action-error';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import type { ResaleListing } from '@/lib/types';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
 import { Button } from '@/components/button';
+import { publicSellerName } from '@/lib/display-name';
 
 export default function MarketplacePage() {
   const { user, loading } = useAuth();
@@ -50,7 +50,7 @@ export default function MarketplacePage() {
       setNotice('Ticket purchased — find it under My tickets.');
       setListings((prev) => prev.filter((l) => l.ticketId !== ticketId));
     } catch (err) {
-      setError(actionErrorMessage(err, 'Could not complete the purchase.'));
+      setError(getErrorMessage(err, 'Could not complete the purchase.'));
     } finally {
       setBuyingTicketId(null);
     }
@@ -100,7 +100,7 @@ export default function MarketplacePage() {
                   </div>
                   <p className="break-words text-sm text-muted">
                     {listing.ticket.ticketType.name} · {listing.ticket.event.venue} · sold by{' '}
-                    {listing.seller.name}
+                    {publicSellerName(listing.seller?.name)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-4">

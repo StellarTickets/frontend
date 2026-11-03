@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { apiFetch, ApiError } from '@/lib/api';
-import {
-  connectWallet,
-  FREIGHTER_INSTALL_URL,
-  isFreighterInstalled,
-  WalletError,
-} from '@/lib/wallet';
+import { apiFetch, getErrorMessage } from '@/lib/api';
+import { connectWallet, FREIGHTER_INSTALL_URL, isFreighterInstalled } from '@/lib/wallet';
 import { CopyButton } from './copy-button';
 
 export function WalletConnectButton() {
@@ -50,9 +45,7 @@ export function WalletConnectButton() {
       await apiFetch('/users/me/wallet', { method: 'PATCH', body: { stellarPublicKey: address } });
       await refresh();
     } catch (err) {
-      if (err instanceof WalletError) setError(err.message);
-      else if (err instanceof ApiError) setError(err.message);
-      else setError('Could not connect your wallet. Is Freighter installed?');
+      setError(getErrorMessage(err, 'Could not connect your wallet. Is Freighter installed?'));
     } finally {
       setConnecting(false);
     }
@@ -85,7 +78,7 @@ export function WalletConnectButton() {
       >
         {connecting ? 'Connecting…' : 'Connect Freighter wallet'}
       </button>
-      {error && <p className="text-sm text-red-300">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
