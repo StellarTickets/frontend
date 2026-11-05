@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { LogoMark } from '@/components/logo';
+import { LogoMarkImage } from '@/components/logo';
 
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
@@ -21,7 +21,7 @@ export default function OpengraphImage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 40 }}>
           {/* Same mark as components/logo.tsx and app/icon.tsx — not a stand-in. */}
-          <LogoMark size={60} />
+          <LogoMarkImage size={60} />
           <div style={{ display: 'flex', color: '#fff', fontSize: 40, fontWeight: 700 }}>
             StellarTickets
           </div>

@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+import { resolveEnv } from './env';
+import { WalletError } from './wallet';
+
+const API_URL = resolveEnv('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3000');
 const TOKEN_KEY = 'stellartickets.token';
 
 export class ApiError extends Error {
@@ -9,6 +12,38 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+/**
+ * The request never got a usable response: it timed out or the network
+ * failed. Extends ApiError (status 0) so existing `instanceof ApiError`
+ * handling, e.g. getErrorMessage, surfaces its friendly message.
+ */
+export class NetworkError extends ApiError {
+  constructor(message: string) {
+    super(message, 0);
+    this.name = 'NetworkError';
+  }
+}
+
+/** Default per-request timeout; override with `RequestOptions.timeoutMs`. */
+export const DEFAULT_TIMEOUT_MS = 15_000;
+
+/** True when the backend rejected our credentials (expired / invalid JWT). */
+export function isUnauthorized(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 401;
+}
+
+/**
+ * User-facing message for a failed API or wallet action. ApiError and
+ * WalletError messages are actionable (rejected Freighter popup, wrong network,
+ * validation); anything else, or an empty message, falls back to `fallback`.
+ */
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if ((err instanceof ApiError || err instanceof WalletError) && err.message) {
+    return err.message;
+  }
+  return fallback;
 }
 
 export function getToken(): string | null {
@@ -28,23 +63,50 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   auth?: boolean;
+  /** Caller-controlled cancellation (e.g. on unmount). Aborting rethrows the original AbortError. */
+  signal?: AbortSignal;
+  /** Milliseconds before the request fails with a NetworkError. Defaults to DEFAULT_TIMEOUT_MS; 0 disables. */
+  timeoutMs?: number;
+}
+
+function isAbortError(err: unknown): boolean {
+  return err instanceof Error && (err.name === 'AbortError' || err.name === 'TimeoutError');
 }
 
 /** Backend BigInt fields (prices, chain ids) arrive as JSON strings/numbers depending on Nest's serializer; kept as strings end-to-end. */
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, auth = true } = options;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const { method = 'GET', body, auth = true, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
+  const headers: Record<string, string> = {};
+  // Body-less requests (e.g. GET) skip Content-Type so browsers don't need a CORS preflight.
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   if (auth) {
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  // Combine the caller's signal with the timeout so a stalled backend can't
+  // leave the UI in a loading state forever (#54).
+  const timeoutSignal = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : undefined;
+  const signals = [signal, timeoutSignal].filter((s): s is AbortSignal => s !== undefined);
+  const combined = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: combined,
+    });
+  } catch (err) {
+    // A deliberate cancel by the caller is not an error to show the user.
+    if (signal?.aborted) throw err;
+    if (timeoutSignal?.aborted || isAbortError(err)) {
+      throw new NetworkError('The server took too long to respond. Please try again.');
+    }
+    throw new NetworkError('Could not reach the server. Check your connection and try again.');
+  }
 
   if (!res.ok) {
     const payload = await res.json().catch(() => null);
