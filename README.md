@@ -192,23 +192,51 @@ npm run build        # production build — also catches type/build errors CI ca
 
 ```text
 .
+├── .github                       # CI and malware-scan workflows, dependabot, CODEOWNERS, issue templates
 ├── src
-│   ├── app                     # routes — see Pages above
+│   ├── app                       # routes — see Pages above
+│   │   ├── about
 │   │   ├── dashboard
+│   │   ├── events
+│   │   ├── login
 │   │   ├── marketplace
 │   │   ├── my-tickets
+│   │   ├── register
+│   │   ├── security
 │   │   ├── verify
-│   │   ├── login / register
-│   │   ├── about / security
-│   │   ├── layout.tsx           # root layout, providers
-│   │   └── page.tsx              # landing page
-│   ├── components               # navbar, footer, wallet-connect-button, ticket-mockup, ...
+│   │   ├── layout.tsx            # root layout, providers
+│   │   ├── page.tsx              # landing page
+│   │   ├── global-error.tsx      # last-resort error boundary
+│   │   ├── globals.css
+│   │   ├── manifest.ts           # web app manifest
+│   │   ├── robots.ts             # robots.txt
+│   │   ├── sitemap.ts            # sitemap.xml
+│   │   ├── icon.tsx              # generated favicon
+│   │   └── opengraph-image.tsx   # generated social-share image
+│   ├── components                # shared UI, tests beside each file
+│   │   ├── button.tsx, pill-button.tsx, text-field.tsx, form-field.tsx, form-error.tsx
+│   │   ├── confirm-dialog.tsx, copy-button.tsx, status-badge.tsx, breadcrumbs.tsx
+│   │   ├── ticket-qr.tsx         # scannable QR for a ticket's gate code
+│   │   ├── qr-scanner.tsx        # live camera QR scanner
+│   │   ├── navbar.tsx, footer.tsx, auth-layout.tsx, providers.tsx
+│   │   ├── wallet-connect-button.tsx, ticket-mockup.tsx, event-details.tsx
+│   │   └── logo.tsx, json-ld.tsx, marquee.tsx, particle-network.tsx, audience-toggle.tsx
 │   └── lib
 │       ├── wallet.ts             # Freighter connect/sign wrapper
 │       ├── onchain.ts            # build -> sign -> confirm helper
 │       ├── api.ts                # typed backend API client
 │       ├── auth-context.tsx      # signed-in session state
-│       └── types.ts              # mirrors the backend's Event/Ticket shapes
+│       ├── use-require-auth.ts   # sends signed-out users from protected pages to /login
+│       ├── use-redirect-if-authenticated.ts  # sends signed-in users away from /login and /register
+│       ├── types.ts              # mirrors the backend's Event/Ticket shapes
+│       ├── env.ts                # guards public env vars against dev-only fallbacks in production
+│       ├── events.ts             # events listing page size and date formatting
+│       ├── event-details.ts      # formatting for the organizer event-details block
+│       ├── display-name.ts       # public form of a seller's name ("Ada L.")
+│       ├── revoke-confirm.ts     # one-line description of a ticket being revoked
+│       ├── transfer-notice.ts    # notice shown after a ticket transfer
+│       ├── structured-data.ts    # schema.org JSON-LD for the site
+│       └── clipboard.ts          # copy-to-clipboard with a fallback
 ├── docs                          # architecture, wallet integration, design system, FAQ
 ├── public                        # static assets
 ├── Dockerfile / docker-compose.yml
