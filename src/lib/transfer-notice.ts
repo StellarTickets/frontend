@@ -11,6 +11,14 @@ export function transferNotice(
 ): string {
   const address = recipient.email ?? email;
   const who = recipient.name ? `${recipient.name} (${address})` : address;
-  const what = ticket?.event?.name ? `${ticket.event.name} · Seat ${ticket.seat}` : 'Ticket';
+  // Seat is optional in practice (GA, wristbands), so skip it when blank rather
+  // than rendering a dangling "Seat " — same rule as describeRevokeTarget.
+  const parts = ticket?.event?.name.trim()
+    ? [
+        ticket.event.name.trim(),
+        ticket.seat.trim() ? `Seat ${ticket.seat.trim()}` : '',
+      ].filter(Boolean)
+    : null;
+  const what = parts ? parts.join(' · ') : 'Ticket';
   return `${what} transferred to ${who}. It's no longer in your tickets.`;
 }
