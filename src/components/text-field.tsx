@@ -15,7 +15,7 @@ export function TextField({ label, icon: Icon, hint, className, ...props }: Text
         <Icon className="pointer-events-none absolute left-3.5 h-4 w-4 text-muted" />
         <input
           {...props}
-          className={`w-full rounded-xl border border-border bg-background py-2.5 pr-3.5 pl-11 text-foreground transition-colors outline-none focus:border-violet focus:ring-2 focus:ring-violet/20 ${className ?? ''}`}
+          className={`w-full rounded-xl border border-border bg-background py-2.5 pr-3.5 pl-11 text-foreground transition-colors outline-none focus:border-violet focus:ring-2 focus:ring-violet ${className ?? ''}`}
         />
       </span>
       {hint && <span className="text-xs text-muted">{hint}</span>}
