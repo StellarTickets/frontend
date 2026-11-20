@@ -16,12 +16,12 @@ export function PillButton({
       href={href}
       className={`group relative inline-flex items-center overflow-hidden rounded-full border px-6 py-3 font-semibold ${
         variant === 'solid'
-          ? 'border-transparent bg-gradient-sunset text-white shadow-lg shadow-violet/20'
+          ? 'border-transparent bg-gradient-action text-white shadow-lg shadow-violet/20'
           : 'border-border-bright text-foreground'
       }`}
     >
       {variant === 'outline' && (
-        <span className="absolute inset-0 -translate-x-full bg-gradient-sunset transition-transform duration-300 ease-out group-hover:translate-x-0" />
+        <span className="absolute inset-0 -translate-x-full bg-gradient-action transition-transform duration-300 ease-out group-hover:translate-x-0" />
       )}
       <span className="relative flex items-center gap-2 transition-colors duration-300 group-hover:text-white">
         {children}
