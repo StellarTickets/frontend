@@ -198,22 +198,112 @@ npm run build        # production build — also catches type/build errors CI ca
 ```text
 .
 ├── src
-│   ├── app                     # routes — see Pages above
+│   ├── app                                    # App Router routes + metadata files
+│   │   ├── about
+│   │   │   └── page.tsx
 │   │   ├── dashboard
+│   │   │   ├── events
+│   │   │   │   └── [id]
+│   │   │   │       ├── page.test.tsx
+│   │   │   │       └── page.tsx
+│   │   │   ├── organizations
+│   │   │   │   └── [id]
+│   │   │   │       └── page.tsx
+│   │   │   ├── page.test.ts
+│   │   │   └── page.tsx
+│   │   ├── events
+│   │   │   ├── page.test.tsx
+│   │   │   └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── global-error.test.ts
+│   │   ├── global-error.tsx
+│   │   ├── globals.css                       # global styles
+│   │   ├── icon.tsx
+│   │   ├── layout.tsx                        # root layout, providers
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── manifest.ts
 │   │   ├── marketplace
+│   │   │   ├── page.test.tsx
+│   │   │   └── page.tsx
 │   │   ├── my-tickets
-│   │   ├── verify
-│   │   ├── login / register
-│   │   ├── about / security
-│   │   ├── layout.tsx           # root layout, providers
-│   │   └── page.tsx              # landing page
-│   ├── components               # navbar, footer, wallet-connect-button, ticket-mockup, ...
-│   └── lib
-│       ├── wallet.ts             # Freighter connect/sign wrapper
-│       ├── onchain.ts            # build -> sign -> confirm helper
-│       ├── api.ts                # typed backend API client
-│       ├── auth-context.tsx      # signed-in session state
-│       └── types.ts              # mirrors the backend's Event/Ticket shapes
+│   │   │   ├── gate-code-copy.test.ts
+│   │   │   ├── page.test.tsx
+│   │   │   └── page.tsx
+│   │   ├── opengraph-image.tsx
+│   │   ├── page.tsx                          # landing page
+│   │   ├── register
+│   │   │   └── page.tsx
+│   │   ├── robots.test.ts
+│   │   ├── robots.ts
+│   │   ├── security
+│   │   │   └── page.tsx
+│   │   ├── sitemap.ts
+│   │   └── verify
+│   │       └── page.tsx
+│   ├── components                            # shared UI primitives + feature components
+│   │   ├── audience-toggle.tsx
+│   │   ├── auth-layout.tsx
+│   │   ├── breadcrumbs.test.ts
+│   │   ├── breadcrumbs.tsx
+│   │   ├── button.test.ts
+│   │   ├── button.tsx
+│   │   ├── confirm-dialog.test.tsx
+│   │   ├── confirm-dialog.tsx
+│   │   ├── copy-button.test.tsx
+│   │   ├── copy-button.tsx
+│   │   ├── event-details.tsx
+│   │   ├── footer.tsx
+│   │   ├── form-error.tsx
+│   │   ├── form-field.tsx
+│   │   ├── json-ld.tsx
+│   │   ├── logo.test.ts
+│   │   ├── logo.tsx
+│   │   ├── marquee.tsx
+│   │   ├── navbar.tsx
+│   │   ├── particle-network.tsx
+│   │   ├── pill-button.tsx
+│   │   ├── providers.tsx
+│   │   ├── qr-scanner.tsx
+│   │   ├── status-badge.tsx
+│   │   ├── text-field.tsx
+│   │   ├── ticket-mockup.tsx
+│   │   ├── ticket-qr.tsx
+│   │   └── wallet-connect-button.tsx
+│   ├── lib                                    # API client, wallet, auth, shared helpers
+│   │   ├── api-error-message.test.ts
+│   │   ├── api-fetch.test.ts
+│   │   ├── api-timeout.test.ts
+│   │   ├── api-token.test.ts
+│   │   ├── api-unauthorized.test.ts
+│   │   ├── api.ts
+│   │   ├── auth-context.test.tsx
+│   │   ├── auth-context.tsx
+│   │   ├── clipboard.test.ts
+│   │   ├── clipboard.ts
+│   │   ├── display-name.test.ts
+│   │   ├── display-name.ts
+│   │   ├── env.test.ts
+│   │   ├── env.ts
+│   │   ├── event-details.test.ts
+│   │   ├── event-details.ts
+│   │   ├── events.ts
+│   │   ├── onchain.test.ts
+│   │   ├── onchain.ts
+│   │   ├── revoke-confirm.test.ts
+│   │   ├── revoke-confirm.ts
+│   │   ├── structured-data.test.ts
+│   │   ├── structured-data.ts
+│   │   ├── transfer-notice.ts
+│   │   ├── types.test.ts
+│   │   ├── types.ts
+│   │   ├── use-redirect-if-authenticated.ts
+│   │   ├── use-require-auth.test.ts
+│   │   ├── use-require-auth.ts
+│   │   ├── wallet.test.ts
+│   │   └── wallet.ts
+│   └── pages                                 # legacy stub (comment-only)
+│       └── EventFix.tsx
 ├── docs                          # architecture, wallet integration, design system, FAQ
 ├── public                        # static assets
 ├── Dockerfile / docker-compose.yml
