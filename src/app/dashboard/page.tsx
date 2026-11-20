@@ -50,6 +50,13 @@ export default function DashboardPage() {
     setSlugError(null);
   }
 
+  function handleSlugBlur(e: React.FocusEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    if (value && !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(value)) {
+      setSlugError(SLUG_VALIDATION_MESSAGE);
+    }
+  }
+
   const SLUG_VALIDATION_MESSAGE =
     'Use lowercase letters, numbers, and single hyphens between words (e.g. my-organization).';
 
@@ -139,16 +146,16 @@ export default function DashboardPage() {
             placeholder="my-organization"
             value={slug}
             onChange={handleSlugChange}
-            onInvalid={(e) => e.currentTarget.setCustomValidity(SLUG_VALIDATION_MESSAGE)}
-            onInput={(e) => e.currentTarget.setCustomValidity('')}
-            aria-describedby="slug-help"
+            onBlur={handleSlugBlur}
+            aria-describedby={slugError ? ‘slug-error slug-help’ : ‘slug-help’}
+            aria-invalid={slugError ? true : undefined}
           />
           <FieldHint id="slug-help">
             {slug
               ? `Your organization identifier: ${slug} — lowercase letters, numbers and hyphens only.`
               : ‘A short, unique identifier for your organization — lowercase letters, numbers and hyphens.’}
           </FieldHint>
-          {slugError && <span className="text-xs text-danger">{slugError}</span>}
+          {slugError && <span id="slug-error" role="alert" className="text-xs text-danger">{slugError}</span>}
         </FormField>
         <FormField label="Industry">
           <Select
