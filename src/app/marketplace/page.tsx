@@ -94,7 +94,7 @@ export default function MarketplacePage() {
                   <div className="flex items-center gap-2">
                     <p className="break-words font-medium">{listing.ticket.event.name}</p>
                     {isOwnListing && (
-                      <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                      <span className="rounded border border-border bg-surface-2 px-2 py-0.5 text-xs font-medium text-success">
                         Your listing
                       </span>
                     )}

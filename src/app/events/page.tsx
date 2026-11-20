@@ -61,7 +61,7 @@ export default function EventsPage() {
             <li key={event.id} className="rounded-lg border border-border p-4">
               <div className="flex items-center gap-2">
                 <p className="break-words font-medium">{event.name}</p>
-                <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                <span className="rounded border border-border bg-surface-2 px-2 py-0.5 text-xs font-medium text-info">
                   {event.category}
                 </span>
               </div>
