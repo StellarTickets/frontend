@@ -92,7 +92,12 @@ export default function DashboardPage() {
       setSlug('');
       slugEditedRef.current = false;
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not create the organization.'));
+      const msg = getErrorMessage(err, 'Could not create the organization.');
+      if (/slug/i.test(msg)) {
+        setSlugError(msg);
+      } else {
+        setError(msg);
+      }
     } finally {
       setSubmitting(false);
     }
