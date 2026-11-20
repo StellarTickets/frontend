@@ -6,12 +6,6 @@ import {
 } from '@stellar/freighter-api';
 import { resolveEnv } from './env';
 
-const NETWORK_PASSPHRASE = resolveEnv(
-  'NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE',
-  process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
-  'Test SDF Network ; September 2015',
-);
-
 export class WalletError extends Error {}
 
 export const FREIGHTER_INSTALL_URL = 'https://www.freighter.app/';
@@ -43,8 +37,13 @@ export async function currentWalletAddress(): Promise<string | null> {
 
 /** Signs an unsigned XDR envelope returned by the backend's `build*Tx` endpoints. */
 export async function signTransaction(unsignedXdr: string, signerAddress: string): Promise<string> {
+  const networkPassphrase = resolveEnv(
+    'NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE',
+    process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
+    'Test SDF Network ; September 2015',
+  );
   const result = await freighterSignTransaction(unsignedXdr, {
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase,
     address: signerAddress,
   });
   if (result.error) {
