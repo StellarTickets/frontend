@@ -105,7 +105,10 @@ export default function EventPage({
       setError("Connect your organization’s Stellar wallet before publishing.");
       return;
     }
-    setError(null);
+    if (!event.ticketTypes || event.ticketTypes.length === 0) {
+      setError("Add at least one ticket type before publishing.");
+      return;
+    }
     setShowPublishReview(false);
     setPublishing(true);
     try {
