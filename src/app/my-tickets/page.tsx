@@ -154,6 +154,7 @@ export default function MyTicketsPage() {
     );
     setTransferEmail('');
     setResalePrice('');
+    setPendingTransfer(null);
   }
 
   function requireWallet(): string | null {
@@ -426,7 +427,7 @@ export default function MyTicketsPage() {
                   </Button>
                 </form>
               )}
-              {pendingTransfer?.ticketId === ticket.id && (
+              {pendingTransfer?.ticketId === ticket.id && activeAction?.ticketId === ticket.id && activeAction.type === 'transfer' && (
                 <div className="mt-3 flex items-center justify-between gap-2 text-sm">
                   <p>
                     Transfer <span className="font-medium">{ticket.event?.name}</span> to{' '}

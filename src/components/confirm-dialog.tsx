@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { Button } from '@/components/button';
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { Button } from "@/components/button";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -29,7 +29,7 @@ export function ConfirmDialog({
   title,
   children,
   confirmLabel,
-  cancelLabel = 'Cancel',
+  cancelLabel = "Cancel",
   loadingLabel,
   loading = false,
   onConfirm,
@@ -38,21 +38,34 @@ export function ConfirmDialog({
   const titleId = useId();
   const bodyId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
+  // Capture opener and manage focus when dialog opens/closes
+  useEffect(() => {
+    if (open) {
+      openerRef.current = document.activeElement as HTMLElement | null;
+      panelRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    } else {
+      openerRef.current?.focus?.();
+      openerRef.current = null;
+    }
+  }, [open]);
+
+  // Handle keyboard interactions
   useEffect(() => {
     if (!open) return;
-    const opener = document.activeElement as HTMLElement | null;
-    panelRef.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !loading) {
+      if (e.key === "Escape" && !loading) {
         e.preventDefault();
         onCancel();
         return;
       }
-      if (e.key !== 'Tab' || !panelRef.current) return;
+      if (e.key !== "Tab" || !panelRef.current) return;
       const focusable = Array.from(
-        panelRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'),
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+        ),
       );
       if (focusable.length === 0) return;
       const first = focusable[0];
@@ -66,10 +79,9 @@ export function ConfirmDialog({
       }
     }
 
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      opener?.focus?.();
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [open, loading, onCancel]);
 
@@ -97,7 +109,12 @@ export function ConfirmDialog({
           {children}
         </div>
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <Button data-autofocus variant="secondary" onClick={onCancel} disabled={loading}>
+          <Button
+            data-autofocus
+            variant="secondary"
+            onClick={onCancel}
+            disabled={loading}
+          >
             {cancelLabel}
           </Button>
           <Button onClick={onConfirm} loading={loading}>
