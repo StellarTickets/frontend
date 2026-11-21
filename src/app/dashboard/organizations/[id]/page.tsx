@@ -59,6 +59,8 @@ export default function OrganizationPage({
       .then(([orgRes, eventsRes]) => {
         setOrg(orgRes);
         setEvents(eventsRes);
+        // Default the event category to the organization's industry
+        setCategory(orgRes.industry);
       })
       .finally(() => setLoadingData(false));
   }, [id, user]);
@@ -111,6 +113,7 @@ export default function OrganizationPage({
       });
       setEvents((prev) => [event, ...prev]);
       setName("");
+      setCategory(org.industry);
       setVenue("");
       setStartsAt("");
       setEndsAt("");
