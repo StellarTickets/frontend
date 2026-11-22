@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { getNetworkInfo } from "@/lib/network";
 import { Logo } from "./logo";
 
 interface NavLink {
@@ -44,6 +45,7 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const networkInfo = getNetworkInfo();
 
   // Close the mobile menu on navigation. Adjusted during render (React's
   // documented pattern for resetting state on a prop change) rather than in
@@ -127,9 +129,28 @@ export function Navbar() {
             : "border-border bg-surface/70 px-5 py-2.5 shadow-lg shadow-black/40"
         }`}
       >
-        <Link href="/" onClick={() => setMenuOpen(false)}>
-          <Logo className="text-base" />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/" onClick={() => setMenuOpen(false)}>
+            <Logo className="text-base" />
+          </Link>
+
+          {/* Network badge */}
+          <div
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+              networkInfo.mismatch
+                ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                : "bg-violet/10 text-violet border border-violet/20"
+            }`}
+            title={
+              networkInfo.mismatch
+                ? `Network mismatch: ${networkInfo.name} configured but passphrase suggests a different network`
+                : `Connected to ${networkInfo.name}`
+            }
+          >
+            {networkInfo.mismatch && <AlertTriangle className="h-3 w-3" />}
+            <span className="capitalize">{networkInfo.name}</span>
+          </div>
+        </div>
 
         <div className="hidden items-center gap-5 text-sm text-muted md:flex">
           {visibleLinks.map((link) => {
