@@ -7,7 +7,7 @@ import { JsonLd } from '@/components/json-ld';
 import { buildStructuredData } from '@/lib/structured-data';
 import './globals.css';
 
-const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], weight: ['500', '700'] });
+const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], weight: ['500', '600', '700'] });
 const body = Inter({ variable: '--font-body', subsets: ['latin'] });
 
 const DESCRIPTION =
