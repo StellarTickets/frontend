@@ -22,20 +22,26 @@ export function ParticleNetwork() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
     let width = 0;
     let height = 0;
     let particles: Particle[] = [];
-    let frameId: number;
+    let frameId: number | null = null;
+    let visible = true;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     function resize() {
       const rect = canvas!.getBoundingClientRect();
+      const widthChanged = Math.abs(rect.width - width) > 1;
+      const previousHeight = height;
       width = rect.width;
       height = rect.height;
       canvas!.width = width * devicePixelRatio;
       canvas!.height = height * devicePixelRatio;
       ctx!.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      if (!widthChanged && previousHeight > 0) {
+        for (const particle of particles) particle.y *= height / previousHeight;
+      }
+      return widthChanged;
     }
 
     function seed() {
@@ -48,13 +54,22 @@ export function ParticleNetwork() {
     }
 
     function tick() {
+      frameId = null;
+      if (reducedMotion.matches || !visible) return;
+
       ctx!.clearRect(0, 0, width, height);
 
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+        if (p.x < 0 || p.x > width) {
+          p.vx *= -1;
+          p.x = Math.max(0, Math.min(width, p.x));
+        }
+        if (p.y < 0 || p.y > height) {
+          p.vy *= -1;
+          p.y = Math.max(0, Math.min(height, p.y));
+        }
       }
 
       for (let i = 0; i < particles.length; i++) {
@@ -83,19 +98,54 @@ export function ParticleNetwork() {
       frameId = requestAnimationFrame(tick);
     }
 
+    function stop() {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+    }
+
+    function start() {
+      if (frameId === null && !reducedMotion.matches && visible) {
+        frameId = requestAnimationFrame(tick);
+      }
+    }
+
+    function onMotionPreferenceChange(event: MediaQueryListEvent) {
+      if (event.matches) {
+        stop();
+      } else {
+        start();
+      }
+    }
+
     resize();
     seed();
-    tick();
+    if (!reducedMotion.matches) start();
 
     const observer = new ResizeObserver(() => {
-      resize();
-      seed();
+      if (resize()) seed();
     });
     observer.observe(canvas);
 
+    reducedMotion.addEventListener('change', onMotionPreferenceChange);
+
+    const visibilityObserver = 'IntersectionObserver' in window
+      ? new IntersectionObserver((entries) => {
+          const entry = entries[0];
+          if (!entry) return;
+          visible = entry.isIntersecting;
+          if (visible) start();
+          else stop();
+        })
+      : null;
+    visibilityObserver?.observe(canvas);
+
     return () => {
-      cancelAnimationFrame(frameId);
+      stop();
+      reducedMotion.removeEventListener('change', onMotionPreferenceChange);
       observer.disconnect();
+      visibilityObserver?.disconnect();
     };
   }, []);
 
