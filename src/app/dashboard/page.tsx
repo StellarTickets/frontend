@@ -60,6 +60,9 @@ export default function DashboardPage() {
   const SLUG_VALIDATION_MESSAGE =
     'Use lowercase letters, numbers, and single hyphens between words (e.g. my-organization).';
 
+  const STELLAR_ACCOUNT_VALIDATION_MESSAGE =
+    'Stellar public key must start with G followed by 55 characters (A-Z, 2-7).';
+
   useRequireAuth();
 
   useEffect(() => {
@@ -177,7 +180,8 @@ export default function DashboardPage() {
         <FormField label="Stellar account (G…)">
           <Input
             required
-            pattern="G[A-Z0-9]{55}"
+            pattern="G[A-Z2-7]{55}"
+            title={STELLAR_ACCOUNT_VALIDATION_MESSAGE}
             value={stellarAccount}
             onChange={(e) => {
               stellarAccountTouched.current = true;
