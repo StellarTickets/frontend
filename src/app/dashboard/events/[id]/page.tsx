@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import { use, useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, getErrorMessage } from '@/lib/api';
-import { signAndSubmit } from '@/lib/onchain';
-import type { EventRecord, TicketType } from '@/lib/types';
-import { FormError } from '@/components/form-error';
-import { WalletConnectButton } from '@/components/wallet-connect-button';
-import { Button } from '@/components/button';
-import { ConfirmDialog } from '@/components/confirm-dialog';
-import { StatusBadge } from '@/components/status-badge';
-import { Breadcrumbs } from '@/components/breadcrumbs';
-import { EventDetails } from '@/components/event-details';
-import { buildPublishSummary } from '@/lib/event-details';
-import { FieldHint, FormField, Input, Select } from '@/components/form-field';
+import { use, useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { useRequireAuth } from "@/lib/use-require-auth";
+import { apiFetch, getErrorMessage } from "@/lib/api";
+import { signAndSubmit } from "@/lib/onchain";
+import type { EventRecord, TicketType } from "@/lib/types";
+import { FormError } from "@/components/form-error";
+import { WalletConnectButton } from "@/components/wallet-connect-button";
+import { Button } from "@/components/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { StatusBadge } from "@/components/status-badge";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { EventDetails } from "@/components/event-details";
+import { buildPublishSummary } from "@/lib/event-details";
+import { FieldHint, FormField, Input, Select } from "@/components/form-field";
 
-export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EventPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const { user, loading } = useAuth();
 
@@ -25,17 +29,17 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const [ttName, setTtName] = useState('');
-  const [ttPrice, setTtPrice] = useState('');
-  const [ttQuantity, setTtQuantity] = useState('');
+  const [ttName, setTtName] = useState("");
+  const [ttPrice, setTtPrice] = useState("");
+  const [ttQuantity, setTtQuantity] = useState("");
   const [savingTicketType, setSavingTicketType] = useState(false);
 
   const [publishing, setPublishing] = useState(false);
   const [showPublishReview, setShowPublishReview] = useState(false);
 
-  const [issueEmail, setIssueEmail] = useState('');
-  const [issueTicketTypeId, setIssueTicketTypeId] = useState('');
-  const [issueSeat, setIssueSeat] = useState('');
+  const [issueEmail, setIssueEmail] = useState("");
+  const [issueTicketTypeId, setIssueTicketTypeId] = useState("");
+  const [issueSeat, setIssueSeat] = useState("");
   const [issuing, setIssuing] = useState(false);
 
   useRequireAuth();
@@ -64,15 +68,23 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
     setSavingTicketType(true);
     try {
       const tt = await apiFetch<TicketType>(`/events/${id}/ticket-types`, {
-        method: 'POST',
-        body: { name: ttName, price: ttPrice, quantityTotal: Number(ttQuantity) },
+        method: "POST",
+        body: {
+          name: ttName,
+          price: ttPrice,
+          quantityTotal: Number(ttQuantity),
+        },
       });
-      setEvent((prev) => (prev ? { ...prev, ticketTypes: [...(prev.ticketTypes ?? []), tt] } : prev));
-      setTtName('');
-      setTtPrice('');
-      setTtQuantity('');
+      setEvent((prev) =>
+        prev
+          ? { ...prev, ticketTypes: [...(prev.ticketTypes ?? []), tt] }
+          : prev,
+      );
+      setTtName("");
+      setTtPrice("");
+      setTtQuantity("");
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not add the ticket type.'));
+      setError(getErrorMessage(err, "Could not add the ticket type."));
     } finally {
       setSavingTicketType(false);
     }
@@ -80,7 +92,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
   async function handlePublish() {
     if (!user?.stellarPublicKey) {
-      setError('Connect your organization’s Stellar wallet before publishing.');
+      setError("Connect your organization’s Stellar wallet before publishing.");
       return;
     }
     setError(null);
@@ -90,32 +102,48 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
   async function confirmPublish() {
     if (!user?.stellarPublicKey || !event) {
-      setError('Connect your organization’s Stellar wallet before publishing.');
+      setError("Connect your organization’s Stellar wallet before publishing.");
       return;
     }
-    setError(null);
+    if (!event.ticketTypes || event.ticketTypes.length === 0) {
+      setError("Add at least one ticket type before publishing.");
+      return;
+    }
     setShowPublishReview(false);
     setPublishing(true);
     try {
-      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(`/events/${id}/publish`, {
-        method: 'POST',
-      });
-      await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
-        apiFetch(`/events/${id}/confirm-publish`, { method: 'POST', body: { signedXdr } }),
+      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
+        `/events/${id}/publish`,
+        {
+          method: "POST",
+        },
       );
-      setNotice('Event published on-chain.');
-      await loadEvent();
+      await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
+        apiFetch(`/events/${id}/confirm-publish`, {
+          method: "POST",
+          body: { signedXdr },
+        }),
+      );
+      setNotice("Event published on-chain.");
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not publish this event.'));
+      setError(getErrorMessage(err, "Could not publish this event."));
     } finally {
       setPublishing(false);
+    }
+    // Reload separately so a network hiccup here never overwrites the success notice.
+    try {
+      await loadEvent();
+    } catch {
+      // non-fatal — the publish succeeded; stale data will refresh on next load
     }
   }
 
   async function handleIssue(e: React.FormEvent) {
     e.preventDefault();
     if (!user?.stellarPublicKey) {
-      setError('Connect your organization’s Stellar wallet before issuing tickets.');
+      setError(
+        "Connect your organization’s Stellar wallet before issuing tickets.",
+      );
       return;
     }
     setError(null);
@@ -125,13 +153,20 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       const recipient = await apiFetch<{ id: string }>(
         `/users/lookup?email=${encodeURIComponent(issueEmail)}`,
       );
-      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>('/tickets/issue', {
-        method: 'POST',
-        body: { ticketTypeId: issueTicketTypeId, toUserId: recipient.id, seat: issueSeat || undefined },
-      });
+      const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
+        "/tickets/issue",
+        {
+          method: "POST",
+          body: {
+            ticketTypeId: issueTicketTypeId,
+            toUserId: recipient.id,
+            seat: issueSeat || undefined,
+          },
+        },
+      );
       await signAndSubmit(unsignedXdr, user.stellarPublicKey, (signedXdr) =>
-        apiFetch('/tickets/confirm-issue', {
-          method: 'POST',
+        apiFetch("/tickets/confirm-issue", {
+          method: "POST",
           body: {
             ticketTypeId: issueTicketTypeId,
             toUserId: recipient.id,
@@ -141,13 +176,18 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         }),
       );
       setNotice(`Ticket issued to ${issueEmail}.`);
-      setIssueEmail('');
-      setIssueSeat('');
-      await loadEvent();
+      setIssueEmail("");
+      setIssueSeat("");
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not issue this ticket.'));
+      setError(getErrorMessage(err, "Could not issue this ticket."));
     } finally {
       setIssuing(false);
+    }
+    // Reload separately so a network hiccup here never overwrites the success notice.
+    try {
+      await loadEvent();
+    } catch {
+      // non-fatal — the ticket was issued; stale data will refresh on next load
     }
   }
 
@@ -158,9 +198,9 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       <Breadcrumbs
         className="mb-6"
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: "Dashboard", href: "/dashboard" },
           {
-            label: event.organization?.name ?? 'Organization',
+            label: event.organization?.name ?? "Organization",
             href: `/dashboard/organizations/${event.organizationId}`,
           },
           { label: event.name },
@@ -183,13 +223,25 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
           <FormError message={error} />
         </div>
       )}
-      {notice && <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>}
+      {notice && (
+        <p className="mt-6 text-sm text-gradient font-medium">{notice}</p>
+      )}
 
-      {event.status === 'DRAFT' && (
+      {event.status === "DRAFT" && (
         <>
-          <Button onClick={handlePublish} loading={publishing} className="mt-6">
-            {publishing ? 'Publishing…' : 'Publish event on-chain'}
+          <Button
+            onClick={handlePublish}
+            loading={publishing}
+            disabled={!event.ticketTypes || event.ticketTypes.length === 0}
+            className="mt-6"
+          >
+            {publishing ? "Publishing…" : "Publish event on-chain"}
           </Button>
+          {(!event.ticketTypes || event.ticketTypes.length === 0) && (
+            <p className="mt-2 text-sm text-muted">
+              Add at least one ticket type before publishing.
+            </p>
+          )}
           {/* #278: publishing is irreversible, so it needs an explicit confirm. */}
           <ConfirmDialog
             open={showPublishReview}
@@ -201,10 +253,12 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             onCancel={() => setShowPublishReview(false)}
           >
             <p>
-              Publishing writes this event to the ticketing contract and opens ticket sales.{' '}
+              Publishing writes this event to the ticketing contract and opens
+              ticket sales.{" "}
               <strong className="text-foreground">
-                The resale cap and organizer royalty below can&apos;t be changed after publishing.
-              </strong>{' '}
+                The resale cap and organizer royalty below can&apos;t be changed
+                after publishing.
+              </strong>{" "}
               Review the details before your wallet asks you to sign.
             </p>
             <pre className="mt-4 whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-sm text-foreground">
@@ -233,7 +287,10 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         </ul>
       )}
 
-      <form onSubmit={handleAddTicketType} className="mt-4 flex flex-wrap items-end gap-3">
+      <form
+        onSubmit={handleAddTicketType}
+        className="mt-4 flex flex-wrap items-end gap-3"
+      >
         <FormField label="Name">
           <Input
             required
@@ -263,18 +320,16 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             className="w-28"
           />
         </FormField>
-        <Button
-          type="submit"
-          loading={savingTicketType}
-          variant="secondary"
-        >
-          {savingTicketType ? 'Adding…' : 'Add ticket type'}
+        <Button type="submit" loading={savingTicketType} variant="secondary">
+          {savingTicketType ? "Adding…" : "Add ticket type"}
         </Button>
       </form>
 
       {event.ticketTypes && event.ticketTypes.length > 0 && (
         <>
-          <h2 className="mt-10 font-heading text-xl font-bold">Issue a ticket</h2>
+          <h2 className="mt-10 font-heading text-xl font-bold">
+            Issue a ticket
+          </h2>
           <form onSubmit={handleIssue} className="mt-4 flex flex-col gap-4">
             <FormField label="Recipient email">
               <Input
@@ -284,7 +339,8 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
                 onChange={(e) => setIssueEmail(e.target.value)}
               />
               <FieldHint>
-                The recipient must already have a StellarTickets account with a connected wallet.
+                The recipient must already have a StellarTickets account with a
+                connected wallet.
               </FieldHint>
             </FormField>
             <FormField label="Ticket type">
@@ -305,12 +361,8 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
                 onChange={(e) => setIssueSeat(e.target.value)}
               />
             </FormField>
-            <Button
-              type="submit"
-              loading={issuing}
-              className="self-start"
-            >
-              {issuing ? 'Issuing…' : 'Issue ticket'}
+            <Button type="submit" loading={issuing} className="self-start">
+              {issuing ? "Issuing…" : "Issue ticket"}
             </Button>
           </form>
         </>

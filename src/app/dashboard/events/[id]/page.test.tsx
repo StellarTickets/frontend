@@ -120,3 +120,88 @@ describe('Event page wallet rejections (#233)', () => {
     expect(container.textContent).toContain('You declined the publish in Freighter');
   });
 });
+
+describe('Event page reload-after-success (#235)', () => {
+  it('shows "Event published" even when the follow-up reload fails', async () => {
+    let eventFetchCount = 0;
+    apiFetch.mockImplementation(async (path: string) => {
+      if (path === '/events/e1') {
+        eventFetchCount++;
+        // First fetch (initial load) succeeds; second (reload after publish) fails.
+        if (eventFetchCount >= 2) throw new Error('Network error on reload');
+        return event;
+      }
+      if (path === '/events/e1/publish') return { unsignedXdr: 'UNSIGNED' };
+      return {};
+    });
+    signTransaction.mockResolvedValue('SIGNED');
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <Suspense fallback={null}>
+          <EventPage params={params} />
+        </Suspense>,
+      );
+    });
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    await click('Publish event on-chain');
+    await click('Confirm and publish');
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    // Success notice must survive the failed reload.
+    expect(container.textContent).toContain('Event published');
+    // No error must have replaced it.
+    expect(container.textContent).not.toMatch(/could not|failed|error/i);
+  });
+
+  it('shows "Ticket issued" even when the follow-up reload fails', async () => {
+    let eventFetchCount = 0;
+    apiFetch.mockImplementation(async (path: string) => {
+      if (path === '/events/e1') {
+        eventFetchCount++;
+        if (eventFetchCount >= 2) throw new Error('Network error on reload');
+        return { ...event, status: 'PUBLISHED', ticketTypes: [{ id: 'tt1', name: 'GA', price: '10', quantityTotal: 100, quantitySold: 0 }] };
+      }
+      if (path.startsWith('/users/lookup')) return { id: 'u2' };
+      if (path === '/tickets/issue') return { unsignedXdr: 'UNSIGNED' };
+      return {};
+    });
+    signTransaction.mockResolvedValue('SIGNED');
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <Suspense fallback={null}>
+          <EventPage params={params} />
+        </Suspense>,
+      );
+    });
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    // Fill in the issue form.
+    const emailInput = container.querySelector('input[type="email"]') as HTMLInputElement | null;
+    if (emailInput) {
+      await act(async () => {
+        emailInput.value = 'buyer@example.com';
+        emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    }
+
+    const issueBtn = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent?.toLowerCase().includes('issue'),
+    );
+    if (issueBtn) {
+      await act(async () => issueBtn.click());
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+    }
+
+    // Even with a failed reload, no error must overwrite the success notice.
+    expect(container.textContent).not.toMatch(/could not issue|network error/i);
+  });
+});

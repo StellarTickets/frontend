@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { apiFetch, getErrorMessage } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
+import { currentWalletAddress } from '@/lib/wallet';
 import { FormError } from '@/components/form-error';
 import { WalletConnectButton } from '@/components/wallet-connect-button';
 import { Button } from '@/components/button';
@@ -60,11 +61,26 @@ export default function VerifyPage() {
     void lookup(scanned);
   }
 
+  async function assertWalletMatches(): Promise<boolean> {
+    const freighterAddress = await currentWalletAddress();
+    if (freighterAddress !== user?.stellarPublicKey) {
+      const expected = user?.stellarPublicKey ?? '(none)';
+      const got = freighterAddress ?? '(no wallet connected)';
+      setError(
+        `Wallet mismatch: your account is signed in as ${expected} but Freighter has ${got} selected. ` +
+          `Switch to the correct account in Freighter and try again.`,
+      );
+      return false;
+    }
+    return true;
+  }
+
   async function handleCheckIn() {
     if (!result || !user?.stellarPublicKey) return;
     setError(null);
     setActionBusy(true);
     try {
+      if (!(await assertWalletMatches())) return;
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${result.ticketId}/check-in`,
         { method: 'POST' },
@@ -91,6 +107,7 @@ export default function VerifyPage() {
     setError(null);
     setActionBusy(true);
     try {
+      if (!(await assertWalletMatches())) return;
       const { unsignedXdr } = await apiFetch<{ unsignedXdr: string }>(
         `/tickets/${result.ticketId}/revoke`,
         { method: 'POST' },
@@ -167,7 +184,7 @@ export default function VerifyPage() {
             <dd>{result.eventName}</dd>
             <dt className="text-muted">Tier / seat</dt>
             <dd>
-              {result.tier} · {result.seat}
+              {result.tier}{result.seat?.trim() ? ` · Seat ${result.seat}` : ' · General admission'}
             </dd>
             <dt className="text-muted">Owner</dt>
             <dd>{result.ownerName}</dd>

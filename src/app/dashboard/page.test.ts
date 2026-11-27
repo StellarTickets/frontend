@@ -152,6 +152,49 @@ async function submit() {
   });
 }
 
+// ── Issue #412: slug hint must not reference a hardcoded domain ───────────────
+
+describe('DashboardPage slug hint', () => {
+  async function nameInput(): Promise<HTMLInputElement> {
+    const input = container.querySelector<HTMLInputElement>('input[type="text"]');
+    if (!input) throw new Error('Name input was not rendered');
+    return input;
+  }
+
+  function slugHint(): HTMLElement | null {
+    return container.querySelector('[id="slug-help"]');
+  }
+
+  it('shows the placeholder hint when slug is empty', async () => {
+    authStore.set({ user: makeUser(WALLET_A), loading: false });
+    await render();
+
+    const hint = slugHint();
+    expect(hint).not.toBeNull();
+    expect(hint!.textContent).not.toContain('netlify');
+    expect(hint!.textContent).not.toContain('stellartickets.netlify.app');
+    expect(hint!.textContent).toMatch(/identifier|organization/i);
+  });
+
+  it('shows the slug value in the hint once the user types a name', async () => {
+    authStore.set({ user: makeUser(WALLET_A), loading: false });
+    await render();
+
+    const name = await nameInput();
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      setter?.call(name, 'Acme Events');
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    const hint = slugHint();
+    expect(hint).not.toBeNull();
+    expect(hint!.textContent).not.toContain('netlify');
+    expect(hint!.textContent).not.toContain('stellartickets.netlify.app');
+    expect(hint!.textContent).toContain('acme-events');
+  });
+});
+
 describe('DashboardPage Stellar account field', () => {
   it('initializes the field from the connected wallet', async () => {
     authStore.set({ user: makeUser(WALLET_A), loading: false });

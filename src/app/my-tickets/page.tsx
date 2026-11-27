@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useRequireAuth } from '@/lib/use-require-auth';
-import { apiFetch, getErrorMessage } from '@/lib/api';
+import { apiFetch, getErrorMessage, isUnauthorized, clearToken } from '@/lib/api';
 import { signAndSubmit } from '@/lib/onchain';
 import { ticketingContractUrl } from '@/lib/event-details';
 import { INDUSTRY_LABELS, type Ticket } from '@/lib/types';
@@ -109,14 +109,29 @@ export default function MyTicketsPage() {
   }, [user]);
 
   // Refresh while the tab is visible so check-ins and sales show up without a reload.
+  // Skip the poll while an action is in flight (#407) to avoid overwriting local state
+  // mid-transfer or mid-fade and to preserve the row the action is working on.
   useEffect(() => {
     if (!user) return;
     async function refresh() {
       if (document.visibilityState !== 'visible') return;
+      if (busyTicketId !== null || leavingTicketId !== null) return;
       try {
-        setTickets(await apiFetch<Ticket[]>('/tickets/mine'));
-      } catch {
-        // Keep showing the last known tickets; the next poll will retry.
+        const fresh = await apiFetch<Ticket[]>('/tickets/mine');
+        // Merge by id instead of replacing outright so rows that are mid-fade
+        // (leavingTicketId) are not silently dropped by the poll (#407).
+        setTickets((prev) => {
+          const byId = new Map(fresh.map((t) => [t.id, t]));
+          const merged = prev.map((t) => byId.get(t.id) ?? t);
+          const existingIds = new Set(prev.map((t) => t.id));
+          for (const t of fresh) {
+            if (!existingIds.has(t.id)) merged.push(t);
+          }
+          return merged;
+        });
+      } catch (err) {
+        if (isUnauthorized(err)) clearToken();
+        // Otherwise keep showing the last known tickets; the next poll will retry.
       }
     }
     const timer = setInterval(() => void refresh(), POLL_INTERVAL_MS);
@@ -125,7 +140,7 @@ export default function MyTicketsPage() {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', refresh);
     };
-  }, [user]);
+  }, [user, busyTicketId, leavingTicketId]);
   async function retryLoad() {
     setError(null);
     setLoadingTickets(true);
@@ -139,6 +154,7 @@ export default function MyTicketsPage() {
     );
     setTransferEmail('');
     setResalePrice('');
+    setPendingTransfer(null);
   }
 
   function requireWallet(): string | null {
@@ -319,7 +335,7 @@ export default function MyTicketsPage() {
                 <div>
                   <p className="font-medium">{ticket.event?.name}</p>
                   <p className="text-sm text-muted">
-                    {ticket.ticketType?.name} · Seat {ticket.seat}
+                    {ticket.ticketType?.name} · {ticket.seat?.trim() ? `Seat ${ticket.seat}` : 'General admission'}
                   </p>
                   {ticket.event && (
                     <p className="text-sm text-muted">
@@ -343,7 +359,7 @@ export default function MyTicketsPage() {
                 </a>
               )}
 
-              {ticket.status === 'VALID' ? (
+              {ticket.status === 'VALID' && ticket.qrSecret ? (
                 <div className="mt-3">
                   <TicketQr value={ticket.qrSecret} />
                   <GateCode secret={ticket.qrSecret} />
@@ -411,7 +427,7 @@ export default function MyTicketsPage() {
                   </Button>
                 </form>
               )}
-              {pendingTransfer?.ticketId === ticket.id && (
+              {pendingTransfer?.ticketId === ticket.id && activeAction?.ticketId === ticket.id && activeAction.type === 'transfer' && (
                 <div className="mt-3 flex items-center justify-between gap-2 text-sm">
                   <p>
                     Transfer <span className="font-medium">{ticket.event?.name}</span> to{' '}

@@ -1,8 +1,11 @@
 import { resolveEnv } from './env';
 import { WalletError } from './wallet';
 
+function apiUrl(): string {
+  return resolveEnv('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3000');
+}
 const API_URL = resolveEnv('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3000');
-const TOKEN_KEY = 'stellartickets.token';
+export const TOKEN_KEY = 'stellartickets.token';
 
 export class ApiError extends Error {
   constructor(
@@ -59,6 +62,18 @@ export function clearToken() {
   window.localStorage.removeItem(TOKEN_KEY);
 }
 
+/**
+ * Called by apiFetch whenever an authenticated request returns 401.
+ * AuthProvider registers a handler via setOnUnauthorized() so it can clear
+ * the session and redirect to /login?next= without api.ts depending on React
+ * or the router (#225).
+ */
+let _onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(handler: (() => void) | null): void {
+  _onUnauthorized = handler;
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
@@ -87,13 +102,31 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   // Combine the caller's signal with the timeout so a stalled backend can't
   // leave the UI in a loading state forever (#54).
+  // AbortSignal.any is Safari 17.4+ / Firefox 124+; use a manual fallback so
+  // the documented Safari 16.4 floor stays intact (#436).
   const timeoutSignal = timeoutMs > 0 ? AbortSignal.timeout(timeoutMs) : undefined;
   const signals = [signal, timeoutSignal].filter((s): s is AbortSignal => s !== undefined);
-  const combined = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
+  let combined: AbortSignal | undefined;
+  if (signals.length === 0) {
+    combined = undefined;
+  } else if (signals.length === 1) {
+    combined = signals[0];
+  } else if (typeof AbortSignal.any === 'function') {
+    combined = AbortSignal.any(signals);
+  } else {
+    // Manual polyfill: create a controller and abort it when either source fires.
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    for (const s of signals) {
+      if (s.aborted) { controller.abort(); break; }
+      s.addEventListener('abort', abort, { once: true });
+    }
+    combined = controller.signal;
+  }
 
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
+    res = await fetch(`${apiUrl()}${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -113,7 +146,12 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     const message = Array.isArray(payload?.message)
       ? payload.message.join(', ')
       : (payload?.message ?? res.statusText);
-    throw new ApiError(message, res.status);
+    const err = new ApiError(message, res.status);
+    if (res.status === 401 && auth) {
+      clearToken();
+      _onUnauthorized?.();
+    }
+    throw err;
   }
 
   if (res.status === 204) return undefined as T;

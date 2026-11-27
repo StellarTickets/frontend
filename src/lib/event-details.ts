@@ -9,12 +9,9 @@ export function buildPublishSummary(event: {
   royaltyBps?: number;
   ticketTypes?: Array<{ name: string; quantityTotal?: number; price?: string }>;
 }): string {
-  const dateSummary = [
-    event.startsAt ? formatEventDate(event.startsAt) : 'Not set',
-    event.endsAt ? `– ${formatEventDate(event.endsAt)}` : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const dateSummary = event.startsAt
+    ? formatEventDate(event.startsAt, event.endsAt)
+    : 'Not set';
 
   const ticketTypes = event.ticketTypes?.length
     ? event.ticketTypes
@@ -51,9 +48,18 @@ export function maxResalePrice(price: string | undefined, bps: number | undefine
   return ((BigInt(price) * BigInt(bps)) / BigInt(10_000)).toString();
 }
 
-/** Locale date + time, e.g. "Sat, 20 Jun 2026, 19:00". */
-export function formatEventDate(iso: string, locale?: string, timeZone?: string): string {
-  return new Intl.DateTimeFormat(locale, {
+/**
+ * Locale date + time, e.g. "Sat, 20 Jun 2026, 19:00".
+ * When `endsAt` is provided, renders a start–end range:
+ * "Sat, 20 Jun 2026, 19:00 – Sat, 20 Jun 2026, 23:00".
+ */
+export function formatEventDate(
+  iso: string,
+  endsAt?: string | null,
+  locale?: string,
+  timeZone?: string,
+): string {
+  const fmt = new Intl.DateTimeFormat(locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -61,25 +67,39 @@ export function formatEventDate(iso: string, locale?: string, timeZone?: string)
     hour: '2-digit',
     minute: '2-digit',
     timeZone,
-  }).format(new Date(iso));
+  });
+  const start = fmt.format(new Date(iso));
+  return endsAt ? `${start} – ${fmt.format(new Date(endsAt))}` : start;
 }
 
 const EXPLORER_NETWORK: Record<string, string> = {
   testnet: 'testnet',
   mainnet: 'public',
   public: 'public',
+  futurenet: 'futurenet',
 };
 
 /**
  * stellar.expert link to the ticketing contract the event lives in, or null
- * when the contract id isn't configured or the network has no explorer.
+ * when the contract id isn't configured. Logs a warning for unrecognised
+ * network names so misconfigured deployments are visible in the console
+ * instead of silently dropping the on-chain verification link (#448).
  */
 export function ticketingContractUrl(
   contractId: string | undefined,
   network: string | undefined,
 ): string | null {
-  const explorerNetwork = EXPLORER_NETWORK[(network ?? 'testnet').toLowerCase()];
-  if (!contractId || !explorerNetwork) return null;
+  if (!contractId) return null;
+  const key = (network ?? '').toLowerCase();
+  const explorerNetwork = EXPLORER_NETWORK[key];
+  if (!explorerNetwork) {
+    console.warn(
+      `ticketingContractUrl: unrecognised network "${network}". ` +
+      `Expected one of: ${Object.keys(EXPLORER_NETWORK).join(', ')}. ` +
+      `The on-chain verification link will not be shown.`,
+    );
+    return null;
+  }
   return `https://stellar.expert/explorer/${explorerNetwork}/contract/${encodeURIComponent(contractId)}`;
 }
 

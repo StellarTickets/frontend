@@ -10,12 +10,36 @@ export const BRAND_GRADIENT = 'linear-gradient(135deg, #a78bfa 0%, #f472b6 55%, 
  * doesn't support SVG <text> — only the shape below is SVG; the letters are
  * a plain positioned span so they render the same way everywhere).
  */
-export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
+export function LogoMark({
+  size = 32,
+  className,
+  'aria-hidden': ariaHidden,
+}: {
+  size?: number;
+  className?: string;
+  'aria-hidden'?: boolean | 'true' | 'false';
+}) {
   // Each instance needs its own gradient id: with a shared id, a second logo
   // on the page resolves `url(#…)` to the first one's <linearGradient>, and
   // loses its fill once that one unmounts or is hidden (#152, #318).
   const gradientId = `st-mark-grad-${useId().replace(/:/g, '')}`;
-  return <LogoMarkImage size={size} className={className} gradientId={gradientId} />;
+  // When aria-hidden is set the mark is decorative (Logo's wordmark follows).
+  // Otherwise expose role="img" with an accessible label for standalone use
+  // (auth-layout, global-error) so AT announces "StellarTickets" not "ST" (#395).
+  if (ariaHidden) {
+    return (
+      <LogoMarkImage size={size} className={className} gradientId={gradientId} aria-hidden="true" />
+    );
+  }
+  return (
+    <LogoMarkImage
+      size={size}
+      className={className}
+      gradientId={gradientId}
+      role="img"
+      aria-label="StellarTickets"
+    />
+  );
 }
 
 /**
@@ -27,15 +51,24 @@ export function LogoMarkImage({
   size = 32,
   className,
   gradientId = 'st-mark-grad',
+  role,
+  'aria-label': ariaLabel,
+  'aria-hidden': ariaHidden,
 }: {
   size?: number;
   className?: string;
   gradientId?: string;
+  role?: string;
+  'aria-label'?: string;
+  'aria-hidden'?: boolean | 'true' | 'false';
 }) {
   const height = (size * 72) / 100;
   return (
     <div
       className={className}
+      role={role}
+      aria-label={ariaLabel}
+      aria-hidden={ariaHidden}
       style={{ position: 'relative', display: 'flex', width: size, height, flexShrink: 0 }}
     >
       <svg viewBox="0 0 100 72" width={size} height={height} aria-hidden="true">
@@ -72,6 +105,7 @@ export function LogoMarkImage({
         }}
       >
         <span
+          aria-hidden="true"
           style={{
             color: '#0a0710',
             fontWeight: 700,
@@ -93,7 +127,9 @@ export function Logo({ className }: { className?: string }) {
     <span
       className={`inline-flex items-center gap-2 font-heading font-bold tracking-tight ${className ?? ''}`}
     >
-      <LogoMark size={38} />
+      {/* aria-hidden: the wordmark "StellarTickets" that follows already names
+          this element; hiding the mark prevents "ST StellarTickets" (#395). */}
+      <LogoMark size={38} aria-hidden="true" />
       StellarTickets
     </span>
   );

@@ -41,4 +41,24 @@ describe('copyToClipboard', () => {
 
     await expect(copyToClipboard('x')).resolves.toBe(false);
   });
+
+  it('restores focus to the previously focused element after the fallback', async () => {
+    document.execCommand = vi.fn().mockReturnValue(true);
+
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    button.focus();
+    expect(document.activeElement).toBe(button);
+
+    await copyToClipboard('gate-code');
+
+    expect(document.activeElement).toBe(button);
+    document.body.removeChild(button);
+  });
+
+  it('does not throw when no element was focused before the fallback', async () => {
+    document.execCommand = vi.fn().mockReturnValue(true);
+    // activeElement is <body> when nothing is focused — focus() on it is a no-op
+    await expect(copyToClipboard('x')).resolves.toBe(true);
+  });
 });

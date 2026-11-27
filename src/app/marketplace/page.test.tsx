@@ -88,3 +88,38 @@ describe('Marketplace wallet rejections (#234)', () => {
     expect(container.textContent).toContain('You declined the purchase in Freighter');
   });
 });
+
+describe('Marketplace resale fetch error (#9)', () => {
+  it('shows an error message when the listings request fails', async () => {
+    apiFetch.mockImplementation(async (path: string) => {
+      if (path === '/tickets/resale') throw new Error('Network error');
+      return {};
+    });
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    await act(async () => root.render(<MarketplacePage />));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    // Must show the error, not the misleading empty-marketplace message.
+    expect(container.textContent).toContain('Network error');
+    expect(container.textContent).not.toContain('No tickets are listed for resale right now');
+  });
+
+  it('does not leave loadingListings stuck on true when the fetch fails', async () => {
+    apiFetch.mockImplementation(async (path: string) => {
+      if (path === '/tickets/resale') throw new Error('500');
+      return {};
+    });
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    await act(async () => root.render(<MarketplacePage />));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    // "Loading…" must not still be visible after the rejected promise settles.
+    expect(container.textContent).not.toContain('Loading…');
+  });
+});

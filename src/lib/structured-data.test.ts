@@ -9,8 +9,19 @@ describe('buildStructuredData', () => {
     expect(org['@type']).toBe('Organization');
     expect(org.name).toBe('StellarTickets');
     expect(org.url).toBe('https://tickets.example.com');
-    expect(org.logo).toBe('https://tickets.example.com/icon');
     expect(org.sameAs).toEqual(GITHUB_LINKS);
+  });
+
+  it('logo is an ImageObject pointing at /logo-512, meeting Google minimum dimensions', () => {
+    expect(org.logo).toMatchObject({
+      '@type': 'ImageObject',
+      url: 'https://tickets.example.com/logo-512',
+      width: 512,
+      height: 512,
+    });
+    // Google requires Organization.logo >= 112×112
+    expect((org.logo as { width: number }).width).toBeGreaterThanOrEqual(112);
+    expect((org.logo as { height: number }).height).toBeGreaterThanOrEqual(112);
   });
 
   it('emits a WebSite published by the Organization', () => {
