@@ -1,21 +1,27 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import sitemap from './sitemap';
 
-describe('sitemap (#17)', () => {
-  it('includes /about', () => {
-    const urls = sitemap().map((e) => new URL(e.url).pathname);
-    expect(urls).toContain('/about');
-  });
-
-  it('includes /security', () => {
-    const urls = sitemap().map((e) => new URL(e.url).pathname);
-    expect(urls).toContain('/security');
-  });
-
-  it('still includes the existing public routes', () => {
-    const urls = sitemap().map((e) => new URL(e.url).pathname);
-    for (const route of ['/', '/events', '/marketplace', '/login', '/register']) {
+describe('sitemap metadata', () => {
+  it('keeps all existing public routes', () => {
+    const urls = sitemap().map((entry) => new URL(entry.url).pathname);
+    for (const route of [
+      '/',
+      '/events',
+      '/marketplace',
+      '/about',
+      '/security',
+      '/login',
+      '/register',
+    ]) {
       expect(urls).toContain(route);
     }
+  });
+
+  it('uses a stable content date instead of the current request time', () => {
+    const first = sitemap();
+    const second = sitemap();
+
+    expect(first).toEqual(second);
+    expect(first.every((entry) => entry.lastModified === '2026-08-20')).toBe(true);
   });
 });
