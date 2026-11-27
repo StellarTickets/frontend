@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 /** The site's one gradient, defined here in the raw values it needs everywhere: Tailwind's `bg-gradient-sunset` class in the browser, and this exact CSS string for the icon/opengraph-image generators, which don't process Tailwind. */
 export const BRAND_GRADIENT = 'linear-gradient(135deg, #a78bfa 0%, #f472b6 55%, #f5b400 100%)';
 
@@ -8,16 +10,70 @@ export const BRAND_GRADIENT = 'linear-gradient(135deg, #a78bfa 0%, #f472b6 55%, 
  * doesn't support SVG <text> — only the shape below is SVG; the letters are
  * a plain positioned span so they render the same way everywhere).
  */
-export function LogoMark({ size = 32, className }: { size?: number; className?: string }) {
+export function LogoMark({
+  size = 32,
+  className,
+  'aria-hidden': ariaHidden,
+}: {
+  size?: number;
+  className?: string;
+  'aria-hidden'?: boolean | 'true' | 'false';
+}) {
+  // Each instance needs its own gradient id: with a shared id, a second logo
+  // on the page resolves `url(#…)` to the first one's <linearGradient>, and
+  // loses its fill once that one unmounts or is hidden (#152, #318).
+  const gradientId = `st-mark-grad-${useId().replace(/:/g, '')}`;
+  // When aria-hidden is set the mark is decorative (Logo's wordmark follows).
+  // Otherwise expose role="img" with an accessible label for standalone use
+  // (auth-layout, global-error) so AT announces "StellarTickets" not "ST" (#395).
+  if (ariaHidden) {
+    return (
+      <LogoMarkImage size={size} className={className} gradientId={gradientId} aria-hidden="true" />
+    );
+  }
+  return (
+    <LogoMarkImage
+      size={size}
+      className={className}
+      gradientId={gradientId}
+      role="img"
+      aria-label="StellarTickets"
+    />
+  );
+}
+
+/**
+ * Hook-free render of {@link LogoMark} for satori (icon.tsx /
+ * opengraph-image.tsx), which calls components outside React and so can't run
+ * `useId`. Each generated image holds exactly one mark, so a fixed id is safe.
+ */
+export function LogoMarkImage({
+  size = 32,
+  className,
+  gradientId = 'st-mark-grad',
+  role,
+  'aria-label': ariaLabel,
+  'aria-hidden': ariaHidden,
+}: {
+  size?: number;
+  className?: string;
+  gradientId?: string;
+  role?: string;
+  'aria-label'?: string;
+  'aria-hidden'?: boolean | 'true' | 'false';
+}) {
   const height = (size * 72) / 100;
   return (
     <div
       className={className}
+      role={role}
+      aria-label={ariaLabel}
+      aria-hidden={ariaHidden}
       style={{ position: 'relative', display: 'flex', width: size, height, flexShrink: 0 }}
     >
       <svg viewBox="0 0 100 72" width={size} height={height} aria-hidden="true">
         <defs>
-          <linearGradient id="st-mark-grad" x1="0" y1="0" x2="100" y2="72" gradientUnits="userSpaceOnUse">
+          <linearGradient id={gradientId} x1="0" y1="0" x2="100" y2="72" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#a78bfa" />
             <stop offset="55%" stopColor="#f472b6" />
             <stop offset="100%" stopColor="#f5b400" />
@@ -25,7 +81,7 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
         </defs>
         <path
           d="M6 16C6 11.6 9.6 8 14 8H86C90.4 8 94 11.6 94 16V26C90.7 27.4 88.5 30.6 88.5 34.5C88.5 38.4 90.7 41.6 94 43V54C94 58.4 90.4 62 86 62H14C9.6 62 6 58.4 6 54V43C9.3 41.6 11.5 38.4 11.5 34.5C11.5 30.6 9.3 27.4 6 26V16Z"
-          fill="url(#st-mark-grad)"
+          fill={`url(#${gradientId})`}
         />
         <path
           d="M64 8V62"
@@ -49,6 +105,7 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
         }}
       >
         <span
+          aria-hidden="true"
           style={{
             color: '#0a0710',
             fontWeight: 700,
@@ -70,7 +127,9 @@ export function Logo({ className }: { className?: string }) {
     <span
       className={`inline-flex items-center gap-2 font-heading font-bold tracking-tight ${className ?? ''}`}
     >
-      <LogoMark size={38} />
+      {/* aria-hidden: the wordmark "StellarTickets" that follows already names
+          this element; hiding the mark prevents "ST StellarTickets" (#395). */}
+      <LogoMark size={38} aria-hidden="true" />
       StellarTickets
     </span>
   );

@@ -5,7 +5,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
 const LAST_MODIFIED = '2026-08-20';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ['', '/marketplace', '/login', '/register'];
+  const routes = ['', '/events', '/marketplace', '/about', '/security', '/login', '/register'];
 
   return routes.map((route) => ({
     url: `${BASE_URL}${route}`,

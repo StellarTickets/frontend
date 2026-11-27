@@ -1,0 +1,25 @@
+name: Mark stale issues
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          stale-issue-label: stale
+          days-before-stale: 60
+          # -1 = mark only, never auto-close; avoids closing planned backlog work
+          days-before-close: -1
+          exempt-issue-labels: 'enhancement,good first issue,help wanted,Stellar Wave'
+          stale-issue-message: >
+            This issue has been automatically marked as stale due to inactivity.
+            It will not be closed automatically — a maintainer will triage it.
+            Please comment if this is still relevant.
