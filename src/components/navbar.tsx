@@ -78,6 +78,12 @@ export function Navbar() {
     firstFocusable?.focus();
 
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        menuToggleRef.current?.focus();
+        return;
+      }
+
       if (e.key !== "Tab") return;
 
       if (e.shiftKey) {
@@ -198,6 +204,7 @@ export function Navbar() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
           className="flex h-9 w-9 items-center justify-center rounded-full text-foreground md:hidden"
         >
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -205,6 +212,9 @@ export function Navbar() {
       </nav>
 
       <div
+        id="mobile-menu"
+        aria-hidden={!menuOpen}
+        inert={!menuOpen}
         ref={menuRef}
         data-was-open="false"
         className={`mx-auto max-w-5xl overflow-hidden transition-all duration-300 md:hidden ${
