@@ -90,7 +90,8 @@ export interface Ticket {
   chainTicketId: string;
   seat: string;
   status: TicketStatus;
-  qrSecret: string;
+  /** Absent for USED / REVOKED / RESALE tickets once the backend fix (#384) is deployed. */
+  qrSecret?: string;
   event?: EventRecord;
   ticketType?: TicketType;
   createdAt: string;
@@ -107,4 +108,12 @@ export interface ResaleListing {
     ticketType: { name: string };
   };
   seller: { name: string };
+}
+
+/** Page-number paginated list, as returned by backend list endpoints (e.g. `GET /events`). */
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
 }

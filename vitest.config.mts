@@ -7,7 +7,7 @@ export default defineConfig({
     environmentOptions: {
       jsdom: { url: 'http://localhost:3001' },
     },
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
   },
   resolve: {
     alias: {
