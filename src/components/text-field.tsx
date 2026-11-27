@@ -37,7 +37,7 @@ export function TextField({
           id={inputId}
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}
-          className={`w-full rounded-xl border border-border bg-background py-2.5 pr-3.5 pl-11 text-foreground transition-colors outline-none focus:border-violet focus:ring-2 focus:ring-violet/20 ${error ? "border-red-500" : ""} ${className ?? ""}`}
+          className={`w-full rounded-xl border border-border bg-background py-2.5 pr-3.5 pl-11 text-foreground transition-colors outline-none focus:border-violet focus:ring-2 focus:ring-violet ${error ? "border-red-500" : ""} ${className ?? ""}`}
         />
       </span>
       {hint && (
