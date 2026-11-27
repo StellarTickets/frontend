@@ -260,11 +260,11 @@ export default function Home() {
       </section>
 
       <section className="px-6 pb-20">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-sunset px-8 py-20 text-center text-white">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-sunset px-8 py-20 text-center text-black">
           <h2 className="font-heading text-[9vw] leading-[1.05] font-bold sm:text-[4.5vw]">
             Ready to issue your first ticket?
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base text-white/85 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-xl text-base text-neutral-900 sm:text-lg">
             For events, travel, entertainment, and transportation — one platform, open source top
             to bottom.
           </p>
@@ -277,7 +277,7 @@ export default function Home() {
             </a>
             <a
               href="/about"
-              className="rounded-full border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10"
+              className="rounded-full border border-neutral-900/40 px-6 py-3 font-semibold text-neutral-900 hover:bg-black/10"
             >
               Learn more
             </a>
