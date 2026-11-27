@@ -45,6 +45,22 @@ describe('apiFetch', () => {
     });
   });
 
+  it('omits Content-Type on a body-less GET so no CORS preflight is forced (#228)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({}) });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await apiFetch('/events', { auth: false });
+    expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Content-Type');
+  });
+
+  it('sends Content-Type: application/json when there is a body (#228)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({}) });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await apiFetch('/organizations', { method: 'POST', auth: false, body: { name: 'Org' } });
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({ 'Content-Type': 'application/json' });
+  });
+
   it('joins an array of validation messages into one string', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,

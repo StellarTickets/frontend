@@ -1,0 +1,14 @@
+{
+  "common": {
+    "about": "About",
+    "security": "Security",
+    "events": "Events",
+    "marketplace": "Marketplace",
+    "dashboard": "Dashboard",
+    "myTickets": "My tickets",
+    "verify": "Verify",
+    "logIn": "Log in",
+    "logOut": "Log out",
+    "getStarted": "Get started"
+  }
+}
