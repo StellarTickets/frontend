@@ -11,6 +11,10 @@ export function transferNotice(
 ): string {
   const address = recipient.email ?? email;
   const who = recipient.name ? `${recipient.name} (${address})` : address;
-  const what = ticket?.event?.name ? `${ticket.event.name} · Seat ${ticket.seat}` : 'Ticket';
+  const what = ticket?.event?.name
+    ? [ticket.event.name, ticket.seat?.trim() ? `Seat ${ticket.seat.trim()}` : '']
+        .filter(Boolean)
+        .join(' · ')
+    : 'Ticket';
   return `${what} transferred to ${who}. It's no longer in your tickets.`;
 }

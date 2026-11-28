@@ -90,7 +90,8 @@ export interface Ticket {
   chainTicketId: string;
   seat: string;
   status: TicketStatus;
-  qrSecret: string;
+  /** Absent for USED / REVOKED / RESALE tickets once the backend fix (#384) is deployed. */
+  qrSecret?: string;
   event?: EventRecord;
   ticketType?: TicketType;
   createdAt: string;

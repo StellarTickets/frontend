@@ -61,6 +61,56 @@ describe('AuthProvider (#306)', () => {
   });
 });
 
+// ── Issue #223: cross-tab auth sync ──────────────────────────────────────────
+
+describe('AuthProvider cross-tab storage sync (#223)', () => {
+  const ME = { id: 'u1', email: 'ada@example.com', name: 'Ada', role: 'ORGANIZER', stellarPublicKey: null, createdAt: '2026-01-01T00:00:00.000Z' };
+
+  function fireStorage(key: string, newValue: string | null) {
+    window.dispatchEvent(Object.assign(new Event('storage'), { key, newValue, oldValue: null, storageArea: localStorage }));
+  }
+
+  it('clears the user when another tab removes the token', async () => {
+    api.getToken.mockReturnValue('tok');
+    api.apiFetch.mockResolvedValue(ME);
+    root = createRoot(document.createElement('div'));
+    await act(async () => root.render(<AuthProvider><Consumer /></AuthProvider>));
+    expect(seen.at(-1)).toMatchObject({ user: ME });
+
+    // Simulate another tab calling clearToken() / localStorage.removeItem(TOKEN_KEY)
+    await act(async () => fireStorage('stellartickets.token', null));
+
+    expect(seen.at(-1)).toMatchObject({ user: null });
+  });
+
+  it('calls refresh when another tab sets a new token', async () => {
+    api.getToken.mockReturnValue(null);
+    api.apiFetch.mockResolvedValue(ME);
+    root = createRoot(document.createElement('div'));
+    await act(async () => root.render(<AuthProvider><Consumer /></AuthProvider>));
+
+    api.getToken.mockReturnValue('new-tok');
+    api.apiFetch.mockResolvedValue(ME);
+    const callsBefore = api.apiFetch.mock.calls.length;
+
+    await act(async () => fireStorage('stellartickets.token', 'new-tok'));
+
+    expect(api.apiFetch.mock.calls.length).toBeGreaterThan(callsBefore);
+  });
+
+  it('ignores storage events for unrelated keys', async () => {
+    api.getToken.mockReturnValue('tok');
+    api.apiFetch.mockResolvedValue(ME);
+    root = createRoot(document.createElement('div'));
+    await act(async () => root.render(<AuthProvider><Consumer /></AuthProvider>));
+    const snapshot = seen.at(-1);
+
+    await act(async () => fireStorage('some-other-key', null));
+
+    expect(seen.at(-1)).toBe(snapshot);
+  });
+});
+
 describe('AuthProvider failed refresh (#226)', () => {
   it('clears the stored token when /users/me returns 401', async () => {
     api.getToken.mockReturnValue('expired-token');

@@ -22,7 +22,12 @@ export function buildStructuredData(siteUrl: string, description: string) {
         '@id': orgId,
         name: 'StellarTickets',
         url,
-        logo: `${url}/icon`,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${url}/logo-512`,
+          width: 512,
+          height: 512,
+        },
         sameAs: GITHUB_LINKS,
       },
       {

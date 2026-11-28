@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildPublishSummary,
   eventTimesPayload,
@@ -77,12 +77,34 @@ describe('ticketingContractUrl', () => {
     expect(ticketingContractUrl('CABC', 'mainnet')).toBe(
       'https://stellar.expert/explorer/public/contract/CABC',
     );
+    expect(ticketingContractUrl('CABC', 'public')).toBe(
+      'https://stellar.expert/explorer/public/contract/CABC',
+    );
+    expect(ticketingContractUrl('CABC', 'futurenet')).toBe(
+      'https://stellar.expert/explorer/futurenet/contract/CABC',
+    );
   });
 
-  it('returns null without a contract id or for unsupported networks', () => {
+  it('returns null without a contract id', () => {
     expect(ticketingContractUrl(undefined, 'testnet')).toBeNull();
     expect(ticketingContractUrl('', 'testnet')).toBeNull();
-    expect(ticketingContractUrl('CABC', 'futurenet')).toBeNull();
+  });
+
+  it('returns null and warns for unrecognised networks', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(ticketingContractUrl('CABC', 'local')).toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('unrecognised network "local"'));
+    expect(ticketingContractUrl('CABC', 'Testnet')).toBe(
+      'https://stellar.expert/explorer/testnet/contract/CABC',
+    );
+    warn.mockRestore();
+  });
+
+  it('returns null and warns when network is undefined', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(ticketingContractUrl('CABC', undefined)).toBeNull();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
 

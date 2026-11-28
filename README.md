@@ -90,6 +90,11 @@ Stellar-specific pieces. Skip this if you already know the stack.
 | **Vitest** | A fast, Vite-based test runner, API-compatible with Jest. | `npm test` runs it; test files sit next to the code they test (`*.test.ts`/`*.test.tsx`). |
 | **Tailwind CSS** | A utility-class CSS framework — styling is done with classes like `flex items-center gap-2` directly in JSX rather than separate stylesheet files. | Every component in `src/components` is styled this way; see [`docs/STYLING.md`](docs/STYLING.md). |
 | **`NEXT_PUBLIC_` prefix** | Any env var starting with this is inlined into the client-side JavaScript bundle at build time — i.e. it is **not secret**. | `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_STELLAR_NETWORK*` are public by design; never put a secret behind this prefix. |
+| **gate code / `qrSecret`** | A per-ticket bearer secret embedded in the QR code — knowing it is enough to check in the ticket. | Never expose it in plain text; render it as a QR image only. See [`docs/GLOSSARY.md`](docs/GLOSSARY.md). |
+| **bps (basis points)** | 100 bps = 1 %. The API stores resale caps and royalties in bps; the UI shows percentages. | Conversion helpers are in `src/lib/event-details.ts` — wrong bps math is a common bug source. See [`docs/GLOSSARY.md`](docs/GLOSSARY.md). |
+| **resale cap** | The maximum resale price as a multiple of face value, stored in bps (15 000 bps = 1.5×). | Controls the secondary-market price ceiling enforced on-chain. See [`docs/GLOSSARY.md`](docs/GLOSSARY.md). |
+
+For the full domain glossary (ticket states, event states, tier vs ticket type, check-in vs revoke, chain IDs, base units, org slug) see **[`docs/GLOSSARY.md`](docs/GLOSSARY.md)**.
 
 ## Non-custodial wallet flow
 
