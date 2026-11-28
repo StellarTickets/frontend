@@ -152,13 +152,13 @@ export default function DashboardPage() {
             value={slug}
             onChange={handleSlugChange}
             onBlur={handleSlugBlur}
-            aria-describedby={slugError ? ‘slug-error slug-help’ : ‘slug-help’}
+            aria-describedby={slugError ? 'slug-error slug-help' : 'slug-help'}
             aria-invalid={slugError ? true : undefined}
           />
           <FieldHint id="slug-help">
             {slug
               ? `Your organization identifier: ${slug} — lowercase letters, numbers and hyphens only.`
-              : ‘A short, unique identifier for your organization — lowercase letters, numbers and hyphens.’}
+              : 'A short, unique identifier for your organization — lowercase letters, numbers and hyphens.'}
           </FieldHint>
           {slugError && <span id="slug-error" role="alert" className="text-xs text-danger">{slugError}</span>}
         </FormField>

@@ -26,7 +26,16 @@ export function FieldHint({ id, children }: { id?: string; children: ReactNode }
 }
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${FIELD_CONTROL_CLASS} ${className ?? ''}`.trim()} />;
+  // Render an explicit type so the control is queryable by attribute (e.g.
+  // input[type="text"]); <input> without a type defaults to text in the DOM
+  // but carries no type attribute.
+  return (
+    <input
+      {...props}
+      type={props.type ?? 'text'}
+      className={`${FIELD_CONTROL_CLASS} ${className ?? ''}`.trim()}
+    />
+  );
 }
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
